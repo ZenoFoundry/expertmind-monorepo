@@ -1,0 +1,36 @@
+{
+  "name": "expertmind",
+  "version": "1.0.0",
+  "description": "Expertmind Monorepo",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "docker-compose up -d",
+    "dev:frontend": "yarn workspace @expertmind/frontend dev:react",
+    "dev:local": "concurrently \"yarn dev:frontend\"",
+    "build": "yarn workspaces run build",
+    "build:frontend": "yarn workspace @expertmind/frontend build",
+    "test": "yarn workspaces run test",
+    "lint": "yarn workspaces run lint",
+    "clean": "yarn workspaces run clean && rm -rf node_modules",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f",
+    "setup": "yarn install && yarn build:shared"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "concurrently": "^7.6.0",
+    "husky": "^8.0.3",
+    "lint-staged": "^15.2.0",
+    "prettier": "^3.1.1",
+    "typescript": "^5.2.2"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "yarn": ">=1.22.0"
+  },
+  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
+}

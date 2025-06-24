@@ -1,0 +1,21 @@
+services:
+  frontend:
+    build:
+      context: ./apps/frontend
+      dockerfile: Dockerfile
+    container_name: frontend
+    ports:
+      - "5173:5173"
+    environment:
+      - NODE_ENV=development
+    volumes:
+      - ./apps/frontend:/app
+      - /app/node_modules
+    networks:
+      - expertmind
+    stdin_open: true
+    tty: true
+
+networks:
+  expertmind:
+    driver: bridge
