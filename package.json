@@ -17,8 +17,7 @@
     "clean": "yarn workspaces run clean && rm -rf node_modules",
     "docker:up": "docker-compose up -d",
     "docker:down": "docker-compose down",
-    "docker:logs": "docker-compose logs -f",
-    "setup": "yarn install && yarn build:shared"
+    "docker:logs": "docker-compose logs -f"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",

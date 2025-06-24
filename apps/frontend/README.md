@@ -1,13 +1,13 @@
-# EM Chatbox
+# Expertmind Chatbox
 
-Electron + React + TypeScript AI chat client with localStorage persistence.
+Expertmind chatbox
 
 ## Quick Start
 
 ```bash
-cd EM-chatbox-app
+cd frontend
 yarn install
-yarn dev
+yarn dev:local
 ```
 
 ## Stack
