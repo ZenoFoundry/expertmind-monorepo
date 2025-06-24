@@ -2,6 +2,11 @@ import { app, BrowserWindow, ipcMain, dialog } from 'electron';
 import * as path from 'path';
 import * as fs from 'fs';
 
+const VITE_PORT = process.env.VITE_PORT || '5173';
+const VITE_HOST = process.env.VITE_HOST || 'localhost';
+const DEV_URL = process.env.ELECTRON_DEV_URL || `http://${VITE_HOST}:${VITE_PORT}`;
+const PROD_PATH = process.env.ELECTRON_PROD_PATH || '../react/index.html';
+
 // Variables globales
 let mainWindow: BrowserWindow;
 // Mejorar detección de modo desarrollo
@@ -31,19 +36,17 @@ function createWindow(): void {
 
   // Cargar la aplicación React
   if (isDev) {
-    // En desarrollo, cargar desde el servidor de Vite
-    mainWindow.loadURL('http://localhost:5173').catch((err) => {
+    console.log(`Cargando aplicación desde: ${DEV_URL}`);
+    
+    mainWindow.loadURL(DEV_URL).catch((err) => {
       console.error('Error cargando URL de desarrollo:', err);
-      // Fallback: intentar cargar después de un delay
       setTimeout(() => {
-        mainWindow.loadURL('http://localhost:5173');
+        mainWindow.loadURL(DEV_URL);
       }, 2000);
     });
-    // Abrir DevTools en desarrollo
     mainWindow.webContents.openDevTools();
   } else {
-    // En producción, cargar archivo estático
-    const indexPath = path.join(__dirname, '../react/index.html');
+    const indexPath = path.join(__dirname, PROD_PATH);
     console.log('Cargando archivo:', indexPath);
     mainWindow.loadFile(indexPath);
   }
