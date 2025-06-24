@@ -23,8 +23,13 @@ yarn dev:local
 yarn dev              # Dev mode (React + Electron)
 yarn build            # Production build
 yarn build:electron   # Package for distribution
-
 ```
+
+## Envs
+| Variable | Descripción |
+|---------|-------------|
+| `VITE_PORT` | Puerto |
+
 
 ## Configuration Files
 
