@@ -7,7 +7,7 @@
     "apps/*"
   ],
   "scripts": {
-    "dev": "docker-compose up -d",
+    "dev": "npm run docker:up",
     "dev:frontend": "yarn workspace @expertmind/frontend dev",
     "dev:backend": "yarn workspace @expertmind/backend start:dev",
     "dev:local": "concurrently \"yarn dev:frontend\" \"yarn dev:backend\"",
@@ -17,11 +17,13 @@
     "test": "yarn workspaces run test",
     "lint": "yarn workspaces run lint",
     "clean": "yarn workspaces run clean && rm -rf node_modules",
-    "docker:up": "docker-compose up -d",
-    "docker:down": "docker-compose down",
-    "docker:logs": "docker-compose logs -f",
-    "docker:logs:backend": "docker-compose logs -f backend",
-    "docker:logs:ollama": "docker-compose logs -f ollama"
+    "docker:up": "./scripts/docker-up.sh",
+    "docker:down": "./scripts/docker-down.sh",
+    "docker:rebuild": "./scripts/docker-rebuild.sh",
+    "docker:logs": "./scripts/docker-logs.sh",
+    "docker:logs:backend": "./scripts/docker-logs.sh backend",
+    "docker:logs:ollama": "./scripts/docker-logs.sh ollama",
+    "docker:check": "./check-docker.sh"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",

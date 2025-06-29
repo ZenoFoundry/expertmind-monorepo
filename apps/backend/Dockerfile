@@ -1,18 +1,24 @@
-# Dockerfile para el backend de ExpertMind
+# Dockerfile para el backend de ExpertMind (Monorepo)
 FROM node:18-alpine
 
 # Establecer directorio de trabajo
 WORKDIR /app
 
-# Copiar archivos de dependencias
-COPY package*.json ./
+# Copiar archivos de dependencias del monorepo
+COPY package.json ./
 COPY yarn.lock ./
 
-# Instalar dependencias
+# Copiar package.json del backend
+COPY apps/backend/package.json ./apps/backend/
+
+# Instalar dependencias de todo el monorepo
 RUN yarn install --frozen-lockfile
 
-# Copiar código fuente
-COPY . .
+# Copiar código fuente del backend
+COPY apps/backend ./apps/backend
+
+# Ir al directorio del backend
+WORKDIR /app/apps/backend
 
 # Construir la aplicación
 RUN yarn build

@@ -2,8 +2,8 @@ services:
   # Frontend React
   frontend:
     build:
-      context: ./apps/frontend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./apps/frontend/Dockerfile
     container_name: expertmind-frontend
     ports:
       - "5173:5173"
@@ -11,8 +11,9 @@ services:
       - NODE_ENV=development
       - VITE_API_URL=http://localhost:3001
     volumes:
-      - ./apps/frontend:/app
+      - ./apps/frontend:/app/apps/frontend
       - /app/node_modules
+      - /app/apps/frontend/node_modules
     networks:
       - expertmind
     stdin_open: true
@@ -23,8 +24,8 @@ services:
   # Backend NestJS
   backend:
     build:
-      context: ./apps/backend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./apps/backend/Dockerfile
     container_name: expertmind-backend
     ports:
       - "3001:3001"
@@ -33,9 +34,10 @@ services:
       - PORT=3001
       - OLLAMA_URL=http://ollama:11434
     volumes:
-      - ./apps/backend:/app
+      - ./apps/backend:/app/apps/backend
       - /app/node_modules
-      - /app/dist
+      - /app/apps/backend/node_modules
+      - /app/apps/backend/dist
     networks:
       - expertmind
     depends_on:
