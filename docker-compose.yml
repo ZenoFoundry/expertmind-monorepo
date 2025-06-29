@@ -1,27 +1,6 @@
-services:
-  # Frontend React
-  frontend:
-    build:
-      context: .
-      dockerfile: ./apps/frontend/Dockerfile
-    container_name: expertmind-frontend
-    ports:
-      - "5173:5173"
-    environment:
-      - NODE_ENV=development
-      - VITE_API_URL=http://localhost:3001
-    volumes:
-      - ./apps/frontend:/app/apps/frontend
-      - /app/node_modules
-      - /app/apps/frontend/node_modules
-    networks:
-      - expertmind
-    stdin_open: true
-    tty: true
-    depends_on:
-      - backend
+version: '3.8'
 
-  # Backend NestJS
+services:
   backend:
     build:
       context: .
@@ -41,47 +20,56 @@ services:
     networks:
       - expertmind
     depends_on:
-      - ollama
+      ollama:
+        condition: service_started
     restart: unless-stopped
 
-  # Ollama con TinyLlama
   ollama:
-    image: ollama/ollama:latest
+    image: ollama/ollama
     container_name: expertmind-ollama
     ports:
       - "11434:11434"
     volumes:
       - ollama_data:/root/.ollama
-    networks:
-      - expertmind
-    restart: unless-stopped
     environment:
-      - OLLAMA_ORIGINS=*
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 30s
-
-  # Servicio para descargar TinyLlama automáticamente
-  ollama-setup:
-    image: curlimages/curl:latest
-    container_name: expertmind-ollama-setup
+      - OLLAMA_HOST=0.0.0.0
+      - OLLAMA_ORIGINS=["*"]
+      - OLLAMA_NUM_PARALLEL=4
+      - OLLAMA_MAX_LOADED_MODELS=1
+      - OLLAMA_KEEP_ALIVE=5m
+    restart: unless-stopped
     networks:
       - expertmind
+    
+  tinyllama-setup:
+    image: ollama/ollama
+    container_name: expertmind-tinyllama-setup
     depends_on:
-      ollama:
-        condition: service_healthy
+      - ollama
+    volumes:
+      - ollama_data:/root/.ollama
+    environment:
+      - OLLAMA_HOST=http://ollama:11434
     command: >
       sh -c "
-        echo 'Esperando a que Ollama esté listo...' &&
-        sleep 10 &&
-        echo 'Descargando modelo TinyLlama...' &&
-        curl -X POST http://ollama:11434/api/pull -d '{\"name\":\"tinyllama\"}' -H 'Content-Type: application/json' &&
-        echo 'TinyLlama descargado exitosamente!'
+        echo '⏳ Esperando a que Ollama esté disponible...'
+        sleep 20
+        echo '🚀 Instalando TinyLlama (EL MÁS RÁPIDO)...'
+        /bin/ollama pull tinyllama
+        echo '🗑️ Eliminando modelos lentos...'
+        /bin/ollama rm phi3:mini || echo 'phi3:mini no encontrado'
+        /bin/ollama rm gemma2:2b || echo 'gemma2:2b no encontrado'
+        /bin/ollama rm gemma:2b || echo 'gemma:2b no encontrado'
+        echo '🔥 Precargando TinyLlama...'
+        /bin/ollama run tinyllama 'Hello' || true
+        echo '✅ ¡TinyLlama configurado y listo!'
+        echo '📋 Modelos finales:'
+        /bin/ollama list
+        echo '🚀 ¡Sistema ultra-rápido configurado!'
       "
     restart: "no"
+    networks:
+      - expertmind
 
 volumes:
   ollama_data:

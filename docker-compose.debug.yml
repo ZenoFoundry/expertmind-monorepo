@@ -1,0 +1,18 @@
+# Docker Compose simplificado solo para probar Ollama
+services:
+  # Solo Ollama para debugging
+  ollama:
+    image: ollama/ollama:latest
+    container_name: debug-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_debug:/root/.ollama
+    environment:
+      - OLLAMA_ORIGINS=*
+    # Sin healthcheck para debugging
+    restart: "no"
+
+volumes:
+  ollama_debug:
+    driver: local
