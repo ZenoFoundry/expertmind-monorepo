@@ -1,13 +1,15 @@
 services:
+  # Frontend React
   frontend:
     build:
       context: ./apps/frontend
       dockerfile: Dockerfile
-    container_name: frontend
+    container_name: expertmind-frontend
     ports:
       - "5173:5173"
     environment:
       - NODE_ENV=development
+      - VITE_API_URL=http://localhost:3001
     volumes:
       - ./apps/frontend:/app
       - /app/node_modules
@@ -15,6 +17,73 @@ services:
       - expertmind
     stdin_open: true
     tty: true
+    depends_on:
+      - backend
+
+  # Backend NestJS
+  backend:
+    build:
+      context: ./apps/backend
+      dockerfile: Dockerfile
+    container_name: expertmind-backend
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=development
+      - PORT=3001
+      - OLLAMA_URL=http://ollama:11434
+    volumes:
+      - ./apps/backend:/app
+      - /app/node_modules
+      - /app/dist
+    networks:
+      - expertmind
+    depends_on:
+      - ollama
+    restart: unless-stopped
+
+  # Ollama con TinyLlama
+  ollama:
+    image: ollama/ollama:latest
+    container_name: expertmind-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    networks:
+      - expertmind
+    restart: unless-stopped
+    environment:
+      - OLLAMA_ORIGINS=*
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # Servicio para descargar TinyLlama automáticamente
+  ollama-setup:
+    image: curlimages/curl:latest
+    container_name: expertmind-ollama-setup
+    networks:
+      - expertmind
+    depends_on:
+      ollama:
+        condition: service_healthy
+    command: >
+      sh -c "
+        echo 'Esperando a que Ollama esté listo...' &&
+        sleep 10 &&
+        echo 'Descargando modelo TinyLlama...' &&
+        curl -X POST http://ollama:11434/api/pull -d '{\"name\":\"tinyllama\"}' -H 'Content-Type: application/json' &&
+        echo 'TinyLlama descargado exitosamente!'
+      "
+    restart: "no"
+
+volumes:
+  ollama_data:
+    driver: local
 
 networks:
   expertmind:

@@ -9,15 +9,19 @@
   "scripts": {
     "dev": "docker-compose up -d",
     "dev:frontend": "yarn workspace @expertmind/frontend dev:react",
-    "dev:local": "concurrently \"yarn dev:frontend\"",
+    "dev:backend": "yarn workspace @expertmind/backend start:dev",
+    "dev:local": "concurrently \"yarn dev:frontend\" \"yarn dev:backend\"",
     "build": "yarn workspaces run build",
     "build:frontend": "yarn workspace @expertmind/frontend build",
+    "build:backend": "yarn workspace @expertmind/backend build",
     "test": "yarn workspaces run test",
     "lint": "yarn workspaces run lint",
     "clean": "yarn workspaces run clean && rm -rf node_modules",
     "docker:up": "docker-compose up -d",
     "docker:down": "docker-compose down",
-    "docker:logs": "docker-compose logs -f"
+    "docker:logs": "docker-compose logs -f",
+    "docker:logs:backend": "docker-compose logs -f backend",
+    "docker:logs:ollama": "docker-compose logs -f ollama"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",
