@@ -8,7 +8,6 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [react()],
-    base: "./",
     resolve: {
       alias: {
         "@": path.resolve(__dirname, "./src"),
@@ -16,10 +15,16 @@ export default defineConfig(({ mode }) => {
     },
     server: {
       port: parseInt(env.VITE_PORT) || 5173,
-      host: env.VITE_HOST || 'localhost'
+      host: env.VITE_HOST || 'localhost',
+      open: true, // Abrir automáticamente en el navegador
     },
     build: {
-      outDir: "dist/react",
+      outDir: "dist",
+      sourcemap: true,
+    },
+    define: {
+      // Variables de entorno para el frontend
+      __API_URL__: JSON.stringify(env.VITE_API_URL || 'http://localhost:3001'),
     },
   };
 });

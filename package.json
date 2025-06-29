@@ -8,7 +8,7 @@
   ],
   "scripts": {
     "dev": "docker-compose up -d",
-    "dev:frontend": "yarn workspace @expertmind/frontend dev:react",
+    "dev:frontend": "yarn workspace @expertmind/frontend dev",
     "dev:backend": "yarn workspace @expertmind/backend start:dev",
     "dev:local": "concurrently \"yarn dev:frontend\" \"yarn dev:backend\"",
     "build": "yarn workspaces run build",
