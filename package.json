@@ -11,6 +11,8 @@
     "dev:frontend": "yarn workspace @expertmind/frontend dev",
     "dev:backend": "yarn workspace @expertmind/backend start:dev",
     "dev:local": "concurrently \"yarn dev:frontend\" \"yarn dev:backend\"",
+    "dev:ollama-only": "docker compose -f docker-compose.ollama-only.yml up -d && echo '\n✅ Ollama está corriendo en Docker. Ahora ejecuta: yarn dev:local'",
+    "dev:full": "docker compose -f docker-compose.yml up -d && echo '\n✅ Todo está corriendo en Docker (Backend + Ollama)'",
     "build": "yarn workspaces run build",
     "build:frontend": "yarn workspace @expertmind/frontend build",
     "build:backend": "yarn workspace @expertmind/backend build",
@@ -19,6 +21,7 @@
     "clean": "yarn workspaces run clean && rm -rf node_modules",
     "docker:up": "docker compose -f docker-compose.yml up -d",
     "docker:down": "docker compose -f docker-compose.yml down",
+    "docker:down-all": "docker compose -f docker-compose.yml down && docker compose -f docker-compose.ollama-only.yml down",
     "docker:logs": "docker compose -f docker-compose.yml logs -f",
     "docker:logs-ollama": "docker compose -f docker-compose.yml logs -f ollama",
     "docker:logs-setup": "docker compose -f docker-compose.yml logs -f model-setup",
@@ -27,7 +30,8 @@
     "docker:models": "docker exec expertmind-ollama ollama list",
     "docker:pull-gemma": "docker exec expertmind-ollama ollama pull gemma2:2b",
     "docker:pull-tinyllama": "docker exec expertmind-ollama ollama pull tinyllama",
-    "docker:test": "curl http://localhost:11434/api/tags"
+    "docker:test": "curl http://localhost:11434/api/tags",
+    "diagnostico": "chmod +x diagnostico.sh && ./diagnostico.sh"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",
