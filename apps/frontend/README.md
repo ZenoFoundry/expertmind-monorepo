@@ -1,84 +1,41 @@
-# Expertmind Chatbox
+# ExpertMind Frontend
 
-Expertmind chatbox
+Aplicación web de chatbox con inteligencia artificial desarrollada en React.
 
-## Quick Start
+## Características
+
+- ✅ Chat en tiempo real con modelos de IA
+- ✅ Interfaz responsiva y moderna
+- ✅ Modo oscuro
+- ✅ Integración con backend NestJS
+- ✅ Soporte para múltiples modelos (vía Ollama)
+
+## Desarrollo
 
 ```bash
-cd frontend
+# Instalar dependencias
 yarn install
-yarn dev:local
+
+# Desarrollo
+yarn dev
+
+# Build para producción
+yarn build
 ```
 
-## Stack
+## Configuración
 
-- **Frontend**: React 18 + TypeScript + Vite
-- **Desktop**: Electron 34.5.8
-- **Storage**: localStorage (browser)
-- **Styling**: CSS custom properties
+La aplicación se conecta al backend en `http://localhost:3001` por defecto.
 
-## Scripts
-
-```bash
-yarn dev              # Dev mode (React + Electron)
-yarn build            # Production build
-yarn build:electron   # Package for distribution
+Para cambiar la URL del API, configura la variable de entorno:
+```env
+VITE_API_URL=http://tu-backend-url
 ```
 
-## Envs
-| Variable | Descripción |
-|---------|-------------|
-| `VITE_PORT` | Puerto |
+## Scripts Disponibles
 
-
-## Configuration Files
-
-### `package.json`
-- **Main entry**: `dist/electron/main.js`
-- **Build config**: `electron-builder` with multi-platform targets
-- **Scripts**: Concurrent React/Electron development
-
-### `vite.config.ts`
-- **Base path**: `./` for Electron compatibility
-- **Build output**: `dist/react`
-- **Dev server**: Port 5173
-- **Aliases**: `@` → `./src`
-
-### `tsconfig.*.json`
-- `tsconfig.json`: React app compilation
-- `tsconfig.electron.json`: Electron main process
-- `tsconfig.node.json`: Node.js utilities
-
-## Architecture
-
-```
-src/
-├── components/         # React UI components
-├── types/             # TypeScript definitions
-├── utils/             # Storage, API, file utilities
-├── App.tsx            # Main React component
-└── main.tsx           # React entry point
-
-electron/              # Electron main process
-dist/                  # Build outputs
-```
-
-## Development Notes
-
-- **Electron main**: Built with `tsc` to `dist/electron/`
-- **React app**: Built with Vite to `dist/react/`
-- **Storage**: localStorage for conversations and settings
-- **API**: Configurable OpenAI-compatible endpoint
-- **File uploads**: Handled via Electron file dialogs
-
-## Build Process
-
-1. **Development**: `concurrently` runs React dev server + Electron
-2. **Production**: Separate builds for React app and Electron main
-3. **Distribution**: `electron-builder` packages for Windows/macOS/Linux
-
-## Environment
-
-- **Node.js**: 18+
-- **Yarn**: Preferred package manager
-- **Development**: Hot reload for React, Electron restart on main process changes
+- `yarn dev` - Servidor de desarrollo
+- `yarn build` - Build de producción
+- `yarn preview` - Preview del build
+- `yarn lint` - Linting del código
+- `yarn type-check` - Verificación de tipos TypeScript

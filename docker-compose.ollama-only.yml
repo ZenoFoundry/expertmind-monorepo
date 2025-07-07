@@ -1,28 +1,6 @@
 version: '3.8'
 
 services:
-  backend:
-    build:
-      context: .
-      dockerfile: ./apps/backend/Dockerfile
-    container_name: expertmind-backend
-    ports:
-      - "3001:3001"
-    environment:
-      - NODE_ENV=development
-      - PORT=3001
-      - OLLAMA_URL=http://ollama:11434
-    volumes:
-      - ./apps/backend:/app/apps/backend
-      - /app/node_modules
-      - /app/apps/backend/node_modules
-    networks:
-      - expertmind
-    depends_on:
-      ollama:
-        condition: service_started
-    restart: unless-stopped
-
   ollama:
     image: ollama/ollama
     container_name: expertmind-ollama
@@ -37,8 +15,6 @@ services:
       - OLLAMA_MAX_LOADED_MODELS=1
       - OLLAMA_KEEP_ALIVE=5m
     restart: unless-stopped
-    networks:
-      - expertmind
     
   tinyllama-setup:
     image: ollama/ollama
@@ -67,13 +43,7 @@ services:
         echo '🚀 ¡Sistema ultra-rápido configurado!'
       "
     restart: "no"
-    networks:
-      - expertmind
 
 volumes:
   ollama_data:
     driver: local
-
-networks:
-  expertmind:
-    driver: bridge

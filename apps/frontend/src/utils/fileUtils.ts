@@ -1,4 +1,4 @@
-// Utilidades para manejo de archivos
+// Utilidades para manejo de archivos en el navegador web
 export class FileUtils {
   // Tipos de archivo soportados
   static readonly SUPPORTED_TYPES = {
@@ -118,20 +118,14 @@ export class FileUtils {
     });
   }
 
-  // Usar la API de Electron para seleccionar archivos
+  // Seleccionar archivos usando la API web estándar
   static async selectFile(): Promise<{
     name: string;
     type: string;
     size: number;
-    path: string;
+    file: File;
   } | null> {
     try {
-      // Verificar si estamos en Electron
-      if (typeof window !== 'undefined' && window.electronAPI) {
-        return await window.electronAPI.selectFile();
-      }
-      
-      // Fallback para desarrollo en browser
       return new Promise((resolve) => {
         const input = document.createElement('input');
         input.type = 'file';
@@ -160,7 +154,7 @@ export class FileUtils {
               name: file.name,
               type: this.getFileExtension(file.name),
               size: file.size,
-              path: file.name // En browser no tenemos path real
+              file: file
             });
           } else {
             resolve(null);
@@ -171,6 +165,67 @@ export class FileUtils {
       });
     } catch (error) {
       console.error('Error selecting file:', error);
+      return null;
+    }
+  }
+
+  // Seleccionar múltiples archivos
+  static async selectMultipleFiles(): Promise<{
+    name: string;
+    type: string;
+    size: number;
+    file: File;
+  }[] | null> {
+    try {
+      return new Promise((resolve) => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.multiple = true;
+        input.accept = [
+          ...this.SUPPORTED_TYPES.images,
+          ...this.SUPPORTED_TYPES.documents
+        ].join(',');
+        
+        input.onchange = (e) => {
+          const files = Array.from((e.target as HTMLInputElement).files || []);
+          if (files.length > 0) {
+            const validFiles: {
+              name: string;
+              type: string;
+              size: number;
+              file: File;
+            }[] = [];
+
+            for (const file of files) {
+              // Validar cada archivo
+              if (!this.isSupportedFile(file.name)) {
+                alert(`Archivo ${file.name}: Tipo de archivo no soportado`);
+                continue;
+              }
+              
+              if (!this.isValidFileSize(file.size)) {
+                alert(`Archivo ${file.name}: Excede el límite de 5MB`);
+                continue;
+              }
+              
+              validFiles.push({
+                name: file.name,
+                type: this.getFileExtension(file.name),
+                size: file.size,
+                file: file
+              });
+            }
+            
+            resolve(validFiles.length > 0 ? validFiles : null);
+          } else {
+            resolve(null);
+          }
+        };
+        
+        input.click();
+      });
+    } catch (error) {
+      console.error('Error selecting files:', error);
       return null;
     }
   }
@@ -209,5 +264,34 @@ export class FileUtils {
     const nameWithoutExt = originalName.replace(extension, '');
     
     return `${nameWithoutExt}_${timestamp}${extension}`;
+  }
+
+  // Crear un blob URL para previsualizar archivos
+  static createBlobUrl(file: File): string {
+    return URL.createObjectURL(file);
+  }
+
+  // Limpiar blob URL
+  static revokeBlobUrl(url: string): void {
+    URL.revokeObjectURL(url);
+  }
+
+  // Obtener información del archivo
+  static getFileInfo(file: File): {
+    name: string;
+    size: string;
+    type: string;
+    lastModified: Date;
+    extension: string;
+    category: 'image' | 'document' | 'unknown';
+  } {
+    return {
+      name: file.name,
+      size: this.formatFileSize(file.size),
+      type: file.type,
+      lastModified: new Date(file.lastModified),
+      extension: this.getFileExtension(file.name),
+      category: this.getFileType(file.name)
+    };
   }
 }

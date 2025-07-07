@@ -24,14 +24,18 @@ export class ApiManager {
     attachments?: Array<{ name: string; content: string; type: string }>
   ): Promise<ApiResponse> {
     try {
-      // Preparar el payload según el formato de tu API
+      // Preparar el payload según el formato esperado por Ollama
       const payload = {
-        message,
-        attachments: attachments || [],
-        config: {
-          model: this.config.model,
+        model: this.config.model || 'llama2',
+        messages: [
+          {
+            role: 'user',
+            content: message
+          }
+        ],
+        options: {
           temperature: this.config.temperature,
-          maxTokens: this.config.maxTokens
+          num_ctx: this.config.maxTokens
         }
       };
 
@@ -69,11 +73,21 @@ export class ApiManager {
       // Parsear la respuesta
       const data = await response.json();
       
-      // Adaptar la respuesta según el formato de tu API
-      return {
-        content: data.content || data.message || data.response || 'No response content',
-        error: data.error || undefined
-      };
+      // Adaptar la respuesta según el formato del backend Ollama
+      if (data.success && data.data) {
+        // Formato del backend: { success: true, data: { message: { content: "..." } } }
+        const content = data.data.message?.content || data.data.response || 'No response content';
+        return {
+          content,
+          error: undefined
+        };
+      } else {
+        // Error del backend
+        return {
+          content: '',
+          error: data.message || 'Unknown error from backend'
+        };
+      }
 
     } catch (error) {
       // Manejar diferentes tipos de errores
@@ -163,11 +177,11 @@ export class ApiManager {
 
 // Configuración por defecto
 export const defaultApiConfig: ApiConfig = {
-  url: '',
+  url: 'http://localhost:3001/ollama/chat',
   apiKey: '',
   headers: {},
   timeout: 30000, // 30 segundos
-  model: 'default',
+  model: 'tinyllama', // modelo más rápido para desarrollo
   temperature: 0.7,
   maxTokens: 1000
 };
