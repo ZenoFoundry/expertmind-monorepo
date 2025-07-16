@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { ApiConfig } from '../types';
-import { ApiManager } from '../utils/api';
+import { ApiConfig } from '../../types';
+import { ApiManager } from '../../utils/api';
 
 interface ConfigPanelProps {
   apiConfig: ApiConfig;

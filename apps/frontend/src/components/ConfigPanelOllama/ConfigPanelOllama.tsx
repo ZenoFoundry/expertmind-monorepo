@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { ApiConfig } from '../types';
-import { OllamaApiManager } from '../utils/ollama-api';
+import { ApiConfig } from '../../types';
+import { OllamaApiManager } from '../../utils/ollama-api';
 
 interface ConfigPanelProps {
   apiConfig: ApiConfig;
@@ -10,7 +10,7 @@ interface ConfigPanelProps {
   availableModels?: string[];
 }
 
-const ConfigPanel: React.FC<ConfigPanelProps> = ({
+const ConfigPanelOllama: React.FC<ConfigPanelProps> = ({
   apiConfig,
   onUpdateConfig,
   onClose,
@@ -493,4 +493,4 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({
   );
 };
 
-export default ConfigPanel;
+export default ConfigPanelOllama;

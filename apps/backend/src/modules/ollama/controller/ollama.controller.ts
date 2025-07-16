@@ -15,21 +15,28 @@ import {
   ApiBody,
   ApiParam,
 } from '@nestjs/swagger';
-import { OllamaService } from './ollama.service';
-import { ChatRequest, GenerateRequest } from './dto/ollama.dto';
+import { OllamaService } from '../services/ollama.service';
+import { ChatRequestDto, GenerateRequestDto } from '../dtos/chat-request.dto';
+import { ApiResponseDto } from '../dtos/api-response.dto';
+import { ChatResponseMapper } from '../mappers/chat-response.mapper';
+import { GenerateResponseMapper } from '../mappers/generate-response.mapper';
 
 @ApiTags('ollama')
 @Controller('ollama')
 export class OllamaController {
   private readonly logger = new Logger(OllamaController.name);
 
-  constructor(private readonly ollamaService: OllamaService) {}
+  constructor(
+    private readonly ollamaService: OllamaService,
+    private readonly chatResponseMapper: ChatResponseMapper,
+    private readonly generateResponseMapper: GenerateResponseMapper,
+  ) {}
 
   @Get('models')
   @ApiOperation({ summary: 'Obtener todos los modelos disponibles en Ollama' })
   @ApiResponse({ status: 200, description: 'Lista de modelos disponibles' })
   @ApiResponse({ status: 500, description: 'Error interno del servidor' })
-  async getModels() {
+  async getModels(): Promise<ApiResponseDto> {
     try {
       const models = await this.ollamaService.getModels();
       return {
@@ -52,7 +59,7 @@ export class OllamaController {
   @Get('status')
   @ApiOperation({ summary: 'Verificar el estado de conexión con Ollama' })
   @ApiResponse({ status: 200, description: 'Estado de Ollama' })
-  async getStatus() {
+  async getStatus(): Promise<ApiResponseDto> {
     try {
       const isReady = await this.ollamaService.isOllamaReady();
       return {
@@ -78,30 +85,18 @@ export class OllamaController {
 
   @Post('chat')
   @ApiOperation({ summary: 'Iniciar una conversación con un modelo de Ollama' })
-  @ApiBody({ type: ChatRequest })
+  @ApiBody({ type: ChatRequestDto })
   @ApiResponse({ status: 200, description: 'Respuesta del chat' })
   @ApiResponse({ status: 400, description: 'Solicitud inválida' })
   @ApiResponse({ status: 500, description: 'Error interno del servidor' })
-  async chat(@Body() chatRequest: ChatRequest) {
+  async chat(@Body() chatRequest: ChatRequestDto): Promise<ApiResponseDto> {
     try {
-      if (!chatRequest.model) {
-        throw new HttpException(
-          'El campo model es requerido',
-          HttpStatus.BAD_REQUEST,
-        );
-      }
-
-      if (!chatRequest.messages || chatRequest.messages.length === 0) {
-        throw new HttpException(
-          'El campo messages es requerido y debe contener al menos un mensaje',
-          HttpStatus.BAD_REQUEST,
-        );
-      }
-
       const response = await this.ollamaService.chat(chatRequest);
+      const mappedResponse = this.chatResponseMapper.toDto(response);
+      
       return {
         success: true,
-        data: response,
+        data: mappedResponse,
         message: 'Chat completado exitosamente',
       };
     } catch (error) {
@@ -118,30 +113,18 @@ export class OllamaController {
 
   @Post('generate')
   @ApiOperation({ summary: 'Generar una respuesta usando un modelo de Ollama' })
-  @ApiBody({ type: GenerateRequest })
+  @ApiBody({ type: GenerateRequestDto })
   @ApiResponse({ status: 200, description: 'Respuesta generada' })
   @ApiResponse({ status: 400, description: 'Solicitud inválida' })
   @ApiResponse({ status: 500, description: 'Error interno del servidor' })
-  async generate(@Body() generateRequest: GenerateRequest) {
+  async generate(@Body() generateRequest: GenerateRequestDto): Promise<ApiResponseDto> {
     try {
-      if (!generateRequest.model) {
-        throw new HttpException(
-          'El campo model es requerido',
-          HttpStatus.BAD_REQUEST,
-        );
-      }
-
-      if (!generateRequest.prompt) {
-        throw new HttpException(
-          'El campo prompt es requerido',
-          HttpStatus.BAD_REQUEST,
-        );
-      }
-
       const response = await this.ollamaService.generate(generateRequest);
+      const mappedResponse = this.generateResponseMapper.toDto(response);
+      
       return {
         success: true,
-        data: response,
+        data: mappedResponse,
         message: 'Respuesta generada exitosamente',
       };
     } catch (error) {
@@ -161,7 +144,7 @@ export class OllamaController {
   @ApiParam({ name: 'modelName', description: 'Nombre del modelo a descargar' })
   @ApiResponse({ status: 200, description: 'Modelo descargado exitosamente' })
   @ApiResponse({ status: 500, description: 'Error interno del servidor' })
-  async pullModel(@Param('modelName') modelName: string) {
+  async pullModel(@Param('modelName') modelName: string): Promise<ApiResponseDto> {
     try {
       const result = await this.ollamaService.pullModel(modelName);
       return {

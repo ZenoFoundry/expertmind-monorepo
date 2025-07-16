@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
-import { Message } from '../types';
-import MessageItem from './MessageItem';
+import { Message } from '../../types';
+import MessageItem from '../MessageItem/MessageItem';
 
 interface MessageListProps {
   messages: Message[];

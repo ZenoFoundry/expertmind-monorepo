@@ -1,7 +1,7 @@
 import React from 'react';
-import { Message, ChatSession } from '../types';
-import MessageList from './MessageList';
-import MessageInput from './MessageInput';
+import { Message, ChatSession } from '../../types';
+import MessageList from '../MessageList/MessageList';
+import MessageInput from '../MessageInput/MessageInput';
 import { MessageSquare } from 'lucide-react';
 
 interface ChatAreaProps {
@@ -37,7 +37,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({
             marginBottom: 'var(--spacing-sm)',
             color: 'var(--text-secondary)'
           }}>
-            Welcome to EM Chatbox
+            Welcome to ExpertBot
           </h2>
           <p style={{ 
             fontSize: '0.9rem',

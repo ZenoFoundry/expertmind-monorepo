@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChatSession } from '../types';
+import { ChatSession } from '../../types';
 import { Plus, Settings, Trash2, MessageSquare } from 'lucide-react';
 
 interface SidebarProps {
@@ -68,7 +68,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             fontWeight: 'bold', 
             color: 'var(--accent-primary)' 
           }}>
-            EM Chatbox
+            ExpertBot
           </h1>
           <button 
             className="btn" 
