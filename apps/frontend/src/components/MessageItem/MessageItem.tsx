@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Message } from '../types';
+import { Message } from '../../types';
 
 interface MessageItemProps {
   message: Message;
