@@ -29,9 +29,9 @@
   --error: #f44336;                /* Rojo para errores */
   --warning: #ff9800;              /* Naranja para warnings */
   
-  /* Fuentes */
-  --font-mono: 'Consolas', 'Monaco', 'Courier New', monospace;
-  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  /* Fuentes - Optimizadas para aplicaciones de escritorio */
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Source Code Pro', 'Menlo', 'Consolas', monospace;
+  --font-sans: 'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Open Sans', 'Helvetica Neue', sans-serif;
   
   /* Espaciado */
   --spacing-xs: 4px;
@@ -51,13 +51,27 @@
 html {
   font-size: 14px;
   line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  height: 100%;
 }
 
 body {
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
+  font-weight: 400;
   background-color: var(--bg-primary);
   color: var(--text-primary);
   overflow: hidden;
+  letter-spacing: -0.01em;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+#root {
+  height: 100%;
+  width: 100%;
 }
 
 /* Área de arrastre para macOS */
@@ -116,11 +130,15 @@ body {
   display: flex;
   flex-direction: column;
   background: var(--bg-primary);
+  min-height: 100vh; /* Fallback */
+  max-height: 100vh; /* Prevent overflow */
+  overflow: hidden;
 }
 
 /* Ajuste para macOS con padding de barra de título */
 .container.mac-titlebar-padding {
   height: calc(100vh - 32px);
+  max-height: calc(100vh - 32px);
   margin-top: 32px;
 }
 
@@ -130,6 +148,7 @@ body {
 
 .flex-1 {
   flex: 1;
+  min-height: 0; /* Critical for nested flexbox */
 }
 
 .flex-col {
@@ -197,8 +216,9 @@ body {
 
 /* Componentes base */
 .btn {
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
   font-size: 0.9rem;
+  font-weight: 500;
   padding: var(--spacing-sm) var(--spacing-md);
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius-sm);
@@ -269,6 +289,8 @@ body {
   border-right: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
+  flex-shrink: 0;
+  min-height: 0; /* Allow flex shrinking */
 }
 
 .main-content {
@@ -276,6 +298,8 @@ body {
   display: flex;
   flex-direction: column;
   min-width: 0;
+  min-height: 0; /* Allow flex shrinking */
+  overflow: hidden;
 }
 
 .chat-area {
@@ -285,10 +309,50 @@ body {
   overflow: hidden;
 }
 
+/* New chat area container with fixed layout */
+.chat-area-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  height: 100%;
+  min-height: 0; /* Critical for flexbox */
+}
+
+.chat-header {
+  flex-shrink: 0;
+  padding: var(--spacing-md);
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+  position: relative;
+  z-index: 10;
+}
+
+.chat-messages-area {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+  min-height: 0; /* Critical for flexbox */
+  /* Ensure it takes available height */
+  height: calc(100vh - 200px); /* Approximate space for header + input */
+}
+
+.chat-input-fixed {
+  flex-shrink: 0;
+  position: relative;
+  z-index: 10;
+  background: var(--bg-primary);
+  border-top: 1px solid var(--border-color);
+}
+
 .messages-container {
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
   padding: var(--spacing-md);
+  scroll-behavior: smooth;
+  /* Ensure proper height calculation */
+  min-height: 0;
 }
 
 .message {
@@ -309,8 +373,16 @@ body {
 .message-content {
   padding: var(--spacing-sm) var(--spacing-md);
   border-radius: var(--border-radius);
+  font-family: var(--font-sans);
   font-size: 0.9rem;
-  line-height: 1.4;
+  line-height: 1.5;
+}
+
+/* Usar fuente monoespaciada para bloques de código */
+.message-content code,
+.message-content pre {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
 }
 
 .message.user .message-content {
@@ -352,6 +424,8 @@ body {
   max-height: 120px;
   resize: none;
   font-family: var(--font-mono);
+  font-size: 0.9rem;
+  line-height: 1.4;
 }
 
 /* Estados de carga */
@@ -372,6 +446,121 @@ body {
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+
+@keyframes slideUp {
+  0% {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Scroll to bottom button */
+.scroll-to-bottom-btn {
+  box-shadow: 0 4px 12px rgba(0, 188, 212, 0.3);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.scroll-to-bottom-btn:hover {
+  box-shadow: 0 6px 16px rgba(0, 188, 212, 0.4);
+}
+
+.scroll-to-bottom-btn:active {
+  transform: scale(0.95) !important;
+}
+
+/* Keyboard shortcut styling */
+kbd {
+  display: inline-block;
+  padding: 2px 6px;
+  font-size: 0.7rem;
+  font-family: var(--font-mono);
+  color: var(--text-secondary);
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 3px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  font-weight: 500;
+  line-height: 1;
+}
+
+/* Scroll Indicator */
+.scroll-indicator {
+  position: absolute;
+  right: 4px;
+  top: var(--spacing-md);
+  bottom: var(--spacing-md);
+  width: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 50;
+  pointer-events: none;
+}
+
+.scroll-progress-track {
+  flex: 1;
+  width: 3px;
+  background: var(--bg-tertiary);
+  border-radius: 2px;
+  position: relative;
+  margin: var(--spacing-sm) 0;
+}
+
+.scroll-progress-bar {
+  width: 100%;
+  background: var(--accent-primary);
+  border-radius: 2px;
+  transition: height 0.2s ease;
+}
+
+.scroll-nav-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  pointer-events: auto;
+}
+
+.scroll-nav-btn {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  font-size: 0;
+}
+
+.scroll-nav-btn:hover {
+  background: var(--accent-primary);
+  color: var(--bg-primary);
+  border-color: var(--accent-primary);
+  transform: scale(1.1);
+}
+
+.scroll-position-info {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-weight: 500;
+  pointer-events: auto;
+  background: var(--bg-secondary);
+  padding: 2px 4px;
+  border-radius: 3px;
+  border: 1px solid var(--border-color);
+  min-width: 24px;
 }
 
 /* Estados de error */
@@ -400,4 +589,82 @@ body {
   .message {
     max-width: 95%;
   }
+  
+  /* Hide scroll indicator on mobile */
+  .scroll-indicator {
+    display: none;
+  }
+  
+  /* Adjust scroll to bottom button for mobile */
+  .scroll-to-bottom-btn {
+    bottom: 100px;
+    right: var(--spacing-sm);
+    width: 44px;
+    height: 44px;
+  }
+  
+  /* Simplify chat header on mobile */
+  .chat-header {
+    padding: var(--spacing-sm) var(--spacing-md);
+  }
+  
+  .chat-header .flex > div:last-child {
+    display: none; /* Hide keyboard shortcuts hint on mobile */
+  }
+}
+
+@media (max-width: 480px) {
+  .scroll-to-bottom-btn {
+    width: 40px;
+    height: 40px;
+    bottom: 90px;
+  }
+  
+  .message-input {
+    font-size: 0.85rem;
+  }
+  
+  .input-area {
+    padding: var(--spacing-sm);
+  }
+}
+
+/* High DPI displays */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 2dppx) {
+  .scroll-progress-track {
+    width: 2px;
+  }
+  
+  .scroll-nav-btn {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .scroll-to-bottom-btn,
+  .scroll-nav-btn,
+  .scroll-progress-bar {
+    transition: none;
+  }
+  
+  .messages-container {
+    scroll-behavior: auto;
+  }
+}
+
+/* Performance optimizations */
+.messages-container {
+  will-change: scroll-position;
+  transform: translateZ(0); /* Force hardware acceleration */
+}
+
+.scroll-to-bottom-btn {
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+}
+
+.scroll-indicator {
+  will-change: opacity;
 }

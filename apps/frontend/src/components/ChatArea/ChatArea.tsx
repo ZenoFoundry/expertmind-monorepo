@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useCallback } from 'react';
 import { Message, ChatSession } from '../../types';
 import MessageList from '../MessageList/MessageList';
 import MessageInput from '../MessageInput/MessageInput';
@@ -17,6 +17,92 @@ const ChatArea: React.FC<ChatAreaProps> = ({
   isLoading,
   onSendMessage
 }) => {
+  // Keyboard shortcuts
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    // Don't interfere if user is typing in an input
+    if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+      return;
+    }
+
+    // Ctrl/Cmd + End: Go to bottom of chat
+    if ((e.ctrlKey || e.metaKey) && e.key === 'End') {
+      e.preventDefault();
+      const container = document.querySelector('.messages-container');
+      if (container) {
+        container.scrollTo({
+          top: container.scrollHeight,
+          behavior: 'smooth'
+        });
+      }
+    }
+    
+    // Ctrl/Cmd + Home: Go to top of chat
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Home') {
+      e.preventDefault();
+      const container = document.querySelector('.messages-container');
+      if (container) {
+        container.scrollTo({
+          top: 0,
+          behavior: 'smooth'
+        });
+      }
+    }
+
+    // Page Down: Scroll down by viewport height
+    if (e.key === 'PageDown') {
+      e.preventDefault();
+      const container = document.querySelector('.messages-container');
+      if (container) {
+        container.scrollBy({
+          top: container.clientHeight * 0.8,
+          behavior: 'smooth'
+        });
+      }
+    }
+
+    // Page Up: Scroll up by viewport height
+    if (e.key === 'PageUp') {
+      e.preventDefault();
+      const container = document.querySelector('.messages-container');
+      if (container) {
+        container.scrollBy({
+          top: -container.clientHeight * 0.8,
+          behavior: 'smooth'
+        });
+      }
+    }
+
+    // Space: Scroll down
+    if (e.key === ' ' && !e.shiftKey) {
+      e.preventDefault();
+      const container = document.querySelector('.messages-container');
+      if (container) {
+        container.scrollBy({
+          top: container.clientHeight * 0.5,
+          behavior: 'smooth'
+        });
+      }
+    }
+
+    // Shift + Space: Scroll up
+    if (e.key === ' ' && e.shiftKey) {
+      e.preventDefault();
+      const container = document.querySelector('.messages-container');
+      if (container) {
+        container.scrollBy({
+          top: -container.clientHeight * 0.5,
+          behavior: 'smooth'
+        });
+      }
+    }
+  }, []);
+
+  // Add keyboard event listeners
+  useEffect(() => {
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [handleKeyDown]);
+
   if (!currentSession) {
     return (
       <div className="chat-area">
@@ -75,21 +161,48 @@ const ChatArea: React.FC<ChatAreaProps> = ({
               <li>• Local SQLite database</li>
             </ul>
           </div>
+          
+          {/* Keyboard shortcuts info */}
+          <div style={{ 
+            marginTop: 'var(--spacing-md)',
+            padding: 'var(--spacing-sm)',
+            backgroundColor: 'var(--bg-tertiary)',
+            borderRadius: 'var(--border-radius-sm)',
+            border: '1px solid var(--border-color)',
+            maxWidth: '500px'
+          }}>
+            <h4 style={{ 
+              fontSize: '0.8rem',
+              fontWeight: '500',
+              marginBottom: 'var(--spacing-xs)',
+              color: 'var(--text-secondary)'
+            }}>
+              Keyboard Shortcuts:
+            </h4>
+            <div style={{ 
+              fontSize: '0.75rem',
+              color: 'var(--text-muted)',
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: 'var(--spacing-xs)'
+            }}>
+              <span><kbd>Ctrl+End</kbd> Go to bottom</span>
+              <span><kbd>Ctrl+Home</kbd> Go to top</span>
+              <span><kbd>PageDown</kbd> Scroll down</span>
+              <span><kbd>PageUp</kbd> Scroll up</span>
+              <span><kbd>Space</kbd> Scroll down</span>
+              <span><kbd>Shift+Space</kbd> Scroll up</span>
+            </div>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="chat-area">
-      {/* Header */}
-      <div 
-        className="p-md"
-        style={{ 
-          borderBottom: '1px solid var(--border-color)',
-          backgroundColor: 'var(--bg-secondary)'
-        }}
-      >
+    <div className="chat-area-container">
+      {/* Header - Fixed */}
+      <div className="chat-header">
         <div className="flex items-center justify-between">
           <div>
             <h2 style={{ 
@@ -108,31 +221,49 @@ const ChatArea: React.FC<ChatAreaProps> = ({
             </p>
           </div>
           
-          {isLoading && (
-            <div className="flex items-center gap-sm">
-              <div className="spinner" />
-              <span style={{ 
-                fontSize: '0.85rem',
-                color: 'var(--text-muted)'
-              }}>
-                Thinking...
-              </span>
+          <div className="flex items-center gap-sm">
+            {isLoading && (
+              <>
+                <div className="spinner" />
+                <span style={{ 
+                  fontSize: '0.85rem',
+                  color: 'var(--text-muted)'
+                }}>
+                  Thinking...
+                </span>
+              </>
+            )}
+            
+            {/* Position indicator */}
+            <div style={{
+              fontSize: '0.7rem',
+              color: 'var(--text-muted)',
+              padding: '2px 6px',
+              backgroundColor: 'var(--bg-tertiary)',
+              borderRadius: '10px',
+              border: '1px solid var(--border-color)'
+            }}>
+              <kbd>Ctrl+End</kbd> Bottom • <kbd>Ctrl+Home</kbd> Top
             </div>
-          )}
+          </div>
         </div>
       </div>
 
-      {/* Messages */}
-      <MessageList 
-        messages={messages}
-        isLoading={isLoading}
-      />
+      {/* Messages Area - Scrollable */}
+      <div className="chat-messages-area">
+        <MessageList 
+          messages={messages}
+          isLoading={isLoading}
+        />
+      </div>
 
-      {/* Input */}
-      <MessageInput 
-        onSendMessage={onSendMessage}
-        disabled={isLoading}
-      />
+      {/* Input Area - Fixed */}
+      <div className="chat-input-fixed">
+        <MessageInput 
+          onSendMessage={onSendMessage}
+          disabled={isLoading}
+        />
+      </div>
     </div>
   );
 };

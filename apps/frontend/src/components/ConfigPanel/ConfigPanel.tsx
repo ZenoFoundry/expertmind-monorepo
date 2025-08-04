@@ -203,6 +203,7 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({
               <option value="gpt-4-turbo">GPT-4 Turbo</option>
               <option value="claude-3-sonnet">Claude 3 Sonnet</option>
               <option value="claude-3-opus">Claude 3 Opus</option>
+              <option value="claude-3-5-sonnet-20241022">Claude 3.5 Sonnet</option>
             </select>
           </div>
 

@@ -1,5 +1,8 @@
 import { ApiConfig, ApiResponse } from '@/types';
 
+// Tipos de API soportados
+type ApiProvider = 'anthropic' | 'ollama';
+
 // Clase para manejar las comunicaciones con la API
 export class ApiManager {
   private config: ApiConfig;
@@ -18,14 +21,62 @@ export class ApiManager {
     return { ...this.config };
   }
 
-  // Enviar mensaje a la API
-  async sendMessage(
-    message: string, 
-    attachments?: Array<{ name: string; content: string; type: string }>
-  ): Promise<ApiResponse> {
-    try {
-      // Preparar el payload según el formato esperado por Ollama
-      const payload = {
+  // Detectar qué tipo de API estamos usando
+  private detectApiProvider(): ApiProvider {
+    const url = this.config.url.toLowerCase();
+    
+    // Si la URL contiene 'anthropic' o si estamos usando el proxy local para Anthropic
+    if (url.includes('anthropic') || url.includes('/api/anthropic')) {
+      return 'anthropic';
+    }
+    
+    // Por defecto, asumir Ollama
+    return 'ollama';
+  }
+
+  // Preparar headers según el proveedor de API
+  private prepareHeaders(provider: ApiProvider): Record<string, string> {
+    const baseHeaders: Record<string, string> = {
+      'Content-Type': 'application/json',
+      ...this.config.headers
+    };
+
+    if (provider === 'anthropic') {
+      // Headers específicos para Anthropic
+      if (this.config.apiKey) {
+        baseHeaders['x-api-key'] = this.config.apiKey;
+      }
+      baseHeaders['anthropic-version'] = '2023-06-01';
+      // Header requerido para acceso directo desde navegador
+      baseHeaders['anthropic-dangerous-direct-browser-access'] = 'true';
+    } else {
+      // Headers para Ollama u otras APIs
+      if (this.config.apiKey) {
+        baseHeaders['Authorization'] = `Bearer ${this.config.apiKey}`;
+      }
+    }
+
+    return baseHeaders;
+  }
+
+  // Preparar payload según el proveedor de API
+  private preparePayload(message: string, provider: ApiProvider): any {
+    if (provider === 'anthropic') {
+      // Formato para Anthropic Claude
+      return {
+        model: this.config.model || 'claude-3-haiku-20240307',
+        max_tokens: this.config.maxTokens || 1024,
+        messages: [
+          {
+            role: 'user',
+            content: message
+          }
+        ],
+        ...(this.config.temperature !== undefined && { temperature: this.config.temperature })
+      };
+    } else {
+      // Formato para Ollama (formato actual)
+      return {
         model: this.config.model || 'llama2',
         messages: [
           {
@@ -38,17 +89,70 @@ export class ApiManager {
           num_ctx: this.config.maxTokens
         }
       };
+    }
+  }
 
-      // Preparar headers
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-        ...this.config.headers
-      };
+  // Procesar respuesta según el proveedor de API
+  private processResponse(data: any, provider: ApiProvider): { content: string; error?: string } {
+    try {
+      if (provider === 'anthropic') {
+        // Procesar respuesta de Anthropic
+        if (data.content && Array.isArray(data.content) && data.content.length > 0) {
+          const textContent = data.content.find((item: any) => item.type === 'text');
+          if (textContent) {
+            return {
+              content: textContent.text,
+              error: undefined
+            };
+          }
+        }
+        
+        // Si no encontramos contenido en el formato esperado
+        return {
+          content: '',
+          error: 'Invalid response format from Anthropic API'
+        };
 
-      // Agregar API Key si está configurada
-      if (this.config.apiKey) {
-        headers['Authorization'] = `Bearer ${this.config.apiKey}`;
+      } else {
+        // Procesar respuesta de Ollama (lógica existente)
+        if (data.success && data.data) {
+          const content = data.data.message?.content || data.data.response || 'No response content';
+          return {
+            content,
+            error: undefined
+          };
+        } else {
+          return {
+            content: '',
+            error: data.message || 'Unknown error from backend'
+          };
+        }
       }
+    } catch (error) {
+      return {
+        content: '',
+        error: `Error processing ${provider} response: ${error instanceof Error ? error.message : 'Unknown error'}`
+      };
+    }
+  }
+
+  // Enviar mensaje a la API
+  async sendMessage(
+    message: string, 
+    attachments?: Array<{ name: string; content: string; type: string }>
+  ): Promise<ApiResponse> {
+    try {
+      const provider = this.detectApiProvider();
+      
+      console.log(`🔍 Detected API provider: ${provider}`);
+      console.log(`📡 Using URL: ${this.config.url}`);
+
+      // Preparar headers y payload según el proveedor
+      const headers = this.prepareHeaders(provider);
+      const payload = this.preparePayload(message, provider);
+
+      console.log('📤 Request headers:', headers);
+      console.log('📤 Request payload:', JSON.stringify(payload, null, 2));
 
       // Crear controlador para timeout
       const controller = new AbortController();
@@ -64,32 +168,25 @@ export class ApiManager {
 
       clearTimeout(timeoutId);
 
+      console.log(`📥 Response status: ${response.status} ${response.statusText}`);
+
       // Verificar si la respuesta es exitosa
       if (!response.ok) {
         const errorText = await response.text();
+        console.error('❌ API Error response:', errorText);
         throw new Error(`API Error ${response.status}: ${errorText}`);
       }
 
       // Parsear la respuesta
       const data = await response.json();
+      console.log('📥 Response data:', data);
       
-      // Adaptar la respuesta según el formato del backend Ollama
-      if (data.success && data.data) {
-        // Formato del backend: { success: true, data: { message: { content: "..." } } }
-        const content = data.data.message?.content || data.data.response || 'No response content';
-        return {
-          content,
-          error: undefined
-        };
-      } else {
-        // Error del backend
-        return {
-          content: '',
-          error: data.message || 'Unknown error from backend'
-        };
-      }
+      // Procesar respuesta según el proveedor
+      return this.processResponse(data, provider);
 
     } catch (error) {
+      console.error('❌ Request error:', error);
+      
       // Manejar diferentes tipos de errores
       if (error instanceof Error) {
         if (error.name === 'AbortError') {
@@ -115,6 +212,7 @@ export class ApiManager {
   // Validar configuración de la API
   validateConfig(): { isValid: boolean; errors: string[] } {
     const errors: string[] = [];
+    const provider = this.detectApiProvider();
 
     // Validar URL
     if (!this.config.url) {
@@ -125,6 +223,11 @@ export class ApiManager {
       } catch {
         errors.push('API URL is not valid');
       }
+    }
+
+    // Validar API Key para Anthropic
+    if (provider === 'anthropic' && !this.config.apiKey) {
+      errors.push('API Key is required for Anthropic API');
     }
 
     // Validar timeout
@@ -184,4 +287,15 @@ export const defaultApiConfig: ApiConfig = {
   model: 'tinyllama', // modelo más rápido para desarrollo
   temperature: 0.7,
   maxTokens: 1000
+};
+
+// Configuración para Anthropic (ejemplo)
+export const anthropicApiConfig: ApiConfig = {
+  url: '/api/anthropic/v1/messages', // URL del proxy local
+  apiKey: '', // Se debe configurar desde la UI
+  headers: {},
+  timeout: 30000,
+  model: 'claude-3-haiku-20240307',
+  temperature: 0.7,
+  maxTokens: 1024
 };

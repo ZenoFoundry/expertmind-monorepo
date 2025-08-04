@@ -17,6 +17,18 @@ export default defineConfig(({ mode }) => {
       port: parseInt(env.VITE_PORT) || 5173,
       host: env.VITE_HOST || 'localhost',
       open: true, // Abrir automáticamente en el navegador
+      proxy: {
+        // Proxy para la API de Anthropic
+        '/api/anthropic': {
+          target: 'https://api.anthropic.com',
+          changeOrigin: true,
+          secure: true,
+          rewrite: (path) => path.replace(/^\/api\/anthropic/, ''),
+          headers: {
+            'anthropic-version': '2023-06-01'
+          }
+        }
+      }
     },
     build: {
       outDir: "dist",

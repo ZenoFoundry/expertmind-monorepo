@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ChatSession } from '../../types';
 import { Plus, Settings, Trash2, MessageSquare } from 'lucide-react';
+import styles from './Sidebar.module.css';
 
 interface SidebarProps {
   sessions: ChatSession[];
@@ -59,29 +60,24 @@ const Sidebar: React.FC<SidebarProps> = ({
   };
 
   return (
-    <div className="sidebar">
+    <div className={styles.sidebar}>
       {/* Header */}
-      <div className="p-md" style={{ borderBottom: '1px solid var(--border-color)' }}>
-        <div className="flex items-center justify-between mb-md">
-          <h1 style={{ 
-            fontSize: '1.1rem', 
-            fontWeight: 'bold', 
-            color: 'var(--accent-primary)' 
-          }}>
+      <div className={styles.header}>
+        <div className={styles.headerTop}>
+          <h1 className={styles.title}>
             ExpertBot
           </h1>
           <button 
-            className="btn" 
+            className={`btn ${styles.settingsButton}`}
             onClick={onShowConfig}
             title="Settings"
-            style={{ padding: '4px 8px' }}
           >
             <Settings size={16} />
           </button>
         </div>
         
         {/* New Session Button/Input */}
-        <div className="flex gap-sm">
+        <div className={styles.newSessionContainer}>
           {showNewSessionInput ? (
             <input
               type="text"
@@ -94,13 +90,12 @@ const Sidebar: React.FC<SidebarProps> = ({
                 }
               }}
               placeholder="Session name..."
-              className="input flex-1"
+              className={`input ${styles.newSessionInput}`}
               autoFocus
-              style={{ fontSize: '0.85rem', padding: '6px 8px' }}
             />
           ) : (
             <button 
-              className="btn btn-primary flex-1" 
+              className={`btn btn-primary ${styles.newSessionButton}`}
               onClick={handleCreateSession}
             >
               <Plus size={16} />
@@ -111,104 +106,46 @@ const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       {/* Sessions List */}
-      <div className="flex-1" style={{ overflowY: 'auto' }}>
+      <div className={styles.sessionsList}>
         {sessions.length === 0 ? (
-          <div className="p-md text-center" style={{ color: 'var(--text-muted)' }}>
-            <MessageSquare size={32} style={{ margin: '0 auto 8px', opacity: 0.5 }} />
-            <p style={{ fontSize: '0.85rem' }}>No conversations yet</p>
-            <p style={{ fontSize: '0.75rem', marginTop: '4px' }}>
+          <div className={styles.emptyState}>
+            <MessageSquare size={32} className={styles.emptyIcon} />
+            <p className={styles.emptyText}>No conversations yet</p>
+            <p className={styles.emptySubtext}>
               Create your first chat to get started
             </p>
           </div>
         ) : (
-          <div className="p-sm">
+          <div className={styles.sessionsContainer}>
             {sessions.map((session) => (
               <div
                 key={session.id}
-                className={`session-item ${currentSession?.id === session.id ? 'active' : ''}`}
+                className={`${styles.sessionItem} ${
+                  currentSession?.id === session.id ? styles.active : ''
+                }`}
                 onClick={() => onSelectSession(session)}
-                style={{
-                  padding: 'var(--spacing-sm)',
-                  borderRadius: 'var(--border-radius-sm)',
-                  cursor: 'pointer',
-                  marginBottom: 'var(--spacing-xs)',
-                  backgroundColor: currentSession?.id === session.id 
-                    ? 'var(--accent-dark)' 
-                    : 'transparent',
-                  border: '1px solid',
-                  borderColor: currentSession?.id === session.id 
-                    ? 'var(--accent-primary)' 
-                    : 'transparent',
-                  transition: 'all 0.2s ease',
-                  position: 'relative',
-                  group: true
-                }}
-                onMouseEnter={(e) => {
-                  if (currentSession?.id !== session.id) {
-                    e.currentTarget.style.backgroundColor = 'var(--bg-hover)';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (currentSession?.id !== session.id) {
-                    e.currentTarget.style.backgroundColor = 'transparent';
-                  }
-                }}
               >
-                <div className="flex items-center justify-between">
-                  <div className="flex-1" style={{ minWidth: 0 }}>
-                    <div 
-                      style={{ 
-                        fontSize: '0.85rem',
-                        fontWeight: '500',
-                        color: 'var(--text-primary)',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap'
-                      }}
-                    >
-                      {session.name}
-                    </div>
-                    <div 
-                      style={{ 
-                        fontSize: '0.75rem',
-                        color: 'var(--text-muted)',
-                        marginTop: '2px'
-                      }}
-                    >
-                      {formatDate(session.updatedAt)} • {session.messageCount} messages
-                    </div>
+                <div className={styles.sessionContent}>
+                  <div className={styles.sessionName}>
+                    {session.name}
                   </div>
-                  
-                  <button
-                    className="delete-btn"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (confirm('Delete this conversation?')) {
-                        onDeleteSession(session.id);
-                      }
-                    }}
-                    style={{
-                      padding: '4px',
-                      border: 'none',
-                      background: 'transparent',
-                      color: 'var(--text-muted)',
-                      cursor: 'pointer',
-                      borderRadius: 'var(--border-radius-sm)',
-                      opacity: 0,
-                      transition: 'all 0.2s ease'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.color = 'var(--error)';
-                      e.currentTarget.style.backgroundColor = 'rgba(244, 67, 54, 0.1)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.color = 'var(--text-muted)';
-                      e.currentTarget.style.backgroundColor = 'transparent';
-                    }}
-                  >
-                    <Trash2 size={14} />
-                  </button>
+                  <div className={styles.sessionMeta}>
+                    {formatDate(session.updatedAt)} • {session.messageCount} messages
+                  </div>
                 </div>
+                
+                <button
+                  className={styles.deleteButton}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (confirm('Delete this conversation?')) {
+                      onDeleteSession(session.id);
+                    }
+                  }}
+                  title="Delete conversation"
+                >
+                  <Trash2 size={14} />
+                </button>
               </div>
             ))}
           </div>
@@ -216,23 +153,9 @@ const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       {/* Footer */}
-      <div 
-        className="p-sm"
-        style={{ 
-          borderTop: '1px solid var(--border-color)',
-          fontSize: '0.75rem',
-          color: 'var(--text-muted)',
-          textAlign: 'center'
-        }}
-      >
-        <p>Electron + React + AI</p>
+      <div className={styles.footer}>
+        <p className={styles.footerText}>Electron + React + AI</p>
       </div>
-
-      <style jsx>{`
-        .session-item:hover .delete-btn {
-          opacity: 1;
-        }
-      `}</style>
     </div>
   );
 };

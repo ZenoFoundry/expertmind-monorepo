@@ -1,3 +1,6 @@
+// CSS Modules types
+/// <reference path="./css-modules.d.ts" />
+
 // Tipos para la configuración de la API
 export interface ApiConfig {
   url: string;
