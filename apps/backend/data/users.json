@@ -1,0 +1,12 @@
+[
+  {
+    "id": "13fb309a-15f5-4db3-957d-a4a07e292e94",
+    "email": "jonhnick15@gmail.com",
+    "name": "Hernan Tapia",
+    "avatar": "https://ui-avatars.com/api/?name=Hernan%20Tapia&background=00bcd4&color=fff&size=128",
+    "createdAt": "2025-08-15T03:35:52.964Z",
+    "updatedAt": "2025-08-15T03:35:52.964Z",
+    "isActive": true,
+    "password": "$2b$12$clAnRPPanL0x.chJUjBGHOTXXzCOjehqF6FNhxVSrY9WzLWKx.czm"
+  }
+]

@@ -164,6 +164,13 @@
   margin: 0;
 }
 
+/* User Profile Container */
+.userProfileContainer {
+  padding: var(--spacing-md);
+  border-bottom: 1px solid var(--border-color);
+  margin-bottom: var(--spacing-sm);
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .sidebar {

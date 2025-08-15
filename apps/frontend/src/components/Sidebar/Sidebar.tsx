@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ChatSession } from '../../types';
 import { Plus, Settings, Trash2, MessageSquare } from 'lucide-react';
+import { UserProfile } from '../Auth';
 import styles from './Sidebar.module.css';
 
 interface SidebarProps {
@@ -10,6 +11,7 @@ interface SidebarProps {
   onCreateSession: (name?: string) => void;
   onDeleteSession: (sessionId: string) => void;
   onShowConfig: () => void;
+  onOpenAuthModal: () => void;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
@@ -18,7 +20,8 @@ const Sidebar: React.FC<SidebarProps> = ({
   onSelectSession,
   onCreateSession,
   onDeleteSession,
-  onShowConfig
+  onShowConfig,
+  onOpenAuthModal
 }) => {
   const [showNewSessionInput, setShowNewSessionInput] = useState(false);
   const [newSessionName, setNewSessionName] = useState('');
@@ -103,6 +106,11 @@ const Sidebar: React.FC<SidebarProps> = ({
             </button>
           )}
         </div>
+      </div>
+
+      {/* User Profile */}
+      <div className={styles.userProfileContainer}>
+        <UserProfile onOpenAuthModal={onOpenAuthModal} />
       </div>
 
       {/* Sessions List */}

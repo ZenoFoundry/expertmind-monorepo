@@ -4,6 +4,7 @@ import { HttpModule } from '@nestjs/axios';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { OllamaModule } from './modules/ollama/ollama.module';
+import { AuthModule } from './modules/auth/auth.module';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { OllamaModule } from './modules/ollama/ollama.module';
     }),
     HttpModule,
     OllamaModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],

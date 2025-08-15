@@ -1,0 +1,201 @@
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+
+export interface User {
+  id: string;
+  email: string;
+  name: string;
+  avatar?: string;
+}
+
+export interface AuthState {
+  user: User | null;
+  isAuthenticated: boolean;
+  isAnonymous: boolean;
+  isLoading: boolean;
+  error: string | null;
+}
+
+export interface AuthContextType extends AuthState {
+  login: (email: string, password: string) => Promise<void>;
+  register: (email: string, password: string, name: string) => Promise<void>;
+  logout: () => void;
+  continueAsAnonymous: () => void;
+  clearError: () => void;
+}
+
+const AuthContext = createContext<AuthContextType | null>(null);
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
+
+interface AuthProviderProps {
+  children: ReactNode;
+}
+
+export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+  const [authState, setAuthState] = useState<AuthState>({
+    user: null,
+    isAuthenticated: false,
+    isAnonymous: false,
+    isLoading: true,
+    error: null,
+  });
+
+  // Verificar si hay una sesión guardada al inicializar
+  useEffect(() => {
+    checkExistingAuth();
+  }, []);
+
+  const checkExistingAuth = async () => {
+    try {
+      const savedAuthType = localStorage.getItem('em-auth-type');
+      const savedUser = localStorage.getItem('em-user');
+
+      if (savedAuthType === 'anonymous') {
+        setAuthState(prev => ({
+          ...prev,
+          isAnonymous: true,
+          isLoading: false,
+        }));
+      } else if (savedAuthType === 'authenticated' && savedUser) {
+        const user = JSON.parse(savedUser);
+        setAuthState(prev => ({
+          ...prev,
+          user,
+          isAuthenticated: true,
+          isLoading: false,
+        }));
+      } else {
+        setAuthState(prev => ({
+          ...prev,
+          isLoading: false,
+        }));
+      }
+    } catch (error) {
+      console.error('Error checking existing auth:', error);
+      setAuthState(prev => ({
+        ...prev,
+        isLoading: false,
+        error: 'Error al verificar la autenticación',
+      }));
+    }
+  };
+
+  const login = async (email: string, password: string): Promise<void> => {
+    setAuthState(prev => ({ ...prev, isLoading: true, error: null }));
+
+    try {
+      // TODO: Aquí irá la llamada al backend
+      // Por ahora simulamos la respuesta
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Simular delay de API
+
+      // Simulación de usuario logueado
+      const user: User = {
+        id: '1',
+        email,
+        name: email.split('@')[0],
+        avatar: `https://ui-avatars.com/api/?name=${email.split('@')[0]}&background=00bcd4&color=fff`,
+      };
+
+      localStorage.setItem('em-auth-type', 'authenticated');
+      localStorage.setItem('em-user', JSON.stringify(user));
+
+      setAuthState(prev => ({
+        ...prev,
+        user,
+        isAuthenticated: true,
+        isAnonymous: false,
+        isLoading: false,
+        error: null,
+      }));
+    } catch (error) {
+      setAuthState(prev => ({
+        ...prev,
+        isLoading: false,
+        error: 'Error al iniciar sesión. Verifica tus credenciales.',
+      }));
+    }
+  };
+
+  const register = async (email: string, password: string, name: string): Promise<void> => {
+    setAuthState(prev => ({ ...prev, isLoading: true, error: null }));
+
+    try {
+      // TODO: Aquí irá la llamada al backend
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Simular delay de API
+
+      const user: User = {
+        id: '1',
+        email,
+        name,
+        avatar: `https://ui-avatars.com/api/?name=${name}&background=00bcd4&color=fff`,
+      };
+
+      localStorage.setItem('em-auth-type', 'authenticated');
+      localStorage.setItem('em-user', JSON.stringify(user));
+
+      setAuthState(prev => ({
+        ...prev,
+        user,
+        isAuthenticated: true,
+        isAnonymous: false,
+        isLoading: false,
+        error: null,
+      }));
+    } catch (error) {
+      setAuthState(prev => ({
+        ...prev,
+        isLoading: false,
+        error: 'Error al crear la cuenta. Inténtalo de nuevo.',
+      }));
+    }
+  };
+
+  const logout = () => {
+    localStorage.removeItem('em-auth-type');
+    localStorage.removeItem('em-user');
+    
+    setAuthState({
+      user: null,
+      isAuthenticated: false,
+      isAnonymous: false,
+      isLoading: false,
+      error: null,
+    });
+  };
+
+  const continueAsAnonymous = () => {
+    localStorage.setItem('em-auth-type', 'anonymous');
+    
+    setAuthState(prev => ({
+      ...prev,
+      isAnonymous: true,
+      isLoading: false,
+      error: null,
+    }));
+  };
+
+  const clearError = () => {
+    setAuthState(prev => ({ ...prev, error: null }));
+  };
+
+  const contextValue: AuthContextType = {
+    ...authState,
+    login,
+    register,
+    logout,
+    continueAsAnonymous,
+    clearError,
+  };
+
+  return (
+    <AuthContext.Provider value={contextValue}>
+      {children}
+    </AuthContext.Provider>
+  );
+};

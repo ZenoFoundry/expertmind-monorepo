@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ChatSession, Message, ApiConfig, AppState } from './types';
 import { dbManager } from './utils/database';
 import { ApiManager, defaultApiConfig } from './utils/api';
+import { AuthProvider, AuthModal } from './components/Auth';
 import Sidebar from './components/Sidebar';
 import ChatArea from './components/ChatArea';
 import ConfigPanel from './components/ConfigPanel';
@@ -24,6 +25,7 @@ const App: React.FC = () => {
   );
 
   const [showConfig, setShowConfig] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   // Inicializar la aplicación
   useEffect(() => {
@@ -257,57 +259,64 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className={`container ${isMac ? 'mac-titlebar-padding' : ''}`}>
-      {/* Área de arrastre para macOS */}
-      {isMac && (
-        <>
-          <div className="drag-region" />
-          <div className="traffic-lights-area" />
-        </>
-      )}
-      
-      {appState.error && (
-        <div className="error mb-md">
-          {appState.error}
-          <button 
-            className="btn btn-sm ml-md" 
-            onClick={clearError}
-            style={{ marginLeft: '8px', padding: '2px 8px', fontSize: '0.8rem' }}
-          >
-            ✕
-          </button>
-        </div>
-      )}
-      
-      <div className="flex flex-1">
-        <Sidebar
-          sessions={appState.sessions}
-          currentSession={appState.currentSession}
-          onSelectSession={selectSession}
-          onCreateSession={createNewSession}
-          onDeleteSession={deleteSession}
-          onShowConfig={() => setShowConfig(true)}
-        />
+    <AuthProvider>
+      <div className={`container ${isMac ? 'mac-titlebar-padding' : ''}`}>
+        {/* Área de arrastre para macOS */}
+        {isMac && (
+          <>
+            <div className="drag-region" />
+            <div className="traffic-lights-area" />
+          </>
+        )}
         
-        <div className="main-content">
-          <ChatArea
-            messages={appState.messages}
+        {appState.error && (
+          <div className="error mb-md">
+            {appState.error}
+            <button 
+              className="btn btn-sm ml-md" 
+              onClick={clearError}
+              style={{ marginLeft: '8px', padding: '2px 8px', fontSize: '0.8rem' }}
+            >
+              ✕
+            </button>
+          </div>
+        )}
+        
+        <div className="flex flex-1">
+          <Sidebar
+            sessions={appState.sessions}
             currentSession={appState.currentSession}
-            isLoading={appState.isLoading}
-            onSendMessage={sendMessage}
+            onSelectSession={selectSession}
+            onCreateSession={createNewSession}
+            onDeleteSession={deleteSession}
+            onShowConfig={() => setShowConfig(true)}
+            onOpenAuthModal={() => setShowAuthModal(true)}
           />
+          
+          <div className="main-content">
+            <ChatArea
+              messages={appState.messages}
+              currentSession={appState.currentSession}
+              isLoading={appState.isLoading}
+              onSendMessage={sendMessage}
+            />
+          </div>
         </div>
+        
+        {showConfig && (
+          <ConfigPanel
+            apiConfig={appState.apiConfig}
+            onUpdateConfig={updateApiConfig}
+            onClose={() => setShowConfig(false)}
+            apiManager={apiManager}
+          />
+        )}
+        
+        {showAuthModal && (
+          <AuthModal onClose={() => setShowAuthModal(false)} />
+        )}
       </div>
-      
-      {showConfig && (
-        <ConfigPanel
-          apiConfig={appState.apiConfig}
-          onUpdateConfig={updateApiConfig}
-          onClose={() => setShowConfig(false)}
-          apiManager={apiManager}
-        />
-      )}
-    </div>
+    </AuthProvider>
   );
 };
 
