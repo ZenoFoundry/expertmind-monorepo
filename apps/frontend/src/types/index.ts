@@ -1,6 +1,11 @@
 // CSS Modules types
 /// <reference path="./css-modules.d.ts" />
 
+// Existing types
+export * from './chat-backend';
+
+// Legacy types (mantener para compatibilidad)
+
 // Tipos para la configuración de la API
 export interface ApiConfig {
   url: string;

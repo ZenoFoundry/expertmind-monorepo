@@ -396,6 +396,7 @@
     passport-jwt "^4.0.1"
     reflect-metadata "^0.1.13"
     rxjs "^7.8.1"
+    uuid "^9.0.1"
 
 "@expertmind/frontend@file:/Users/hernantapia/mine/expertmind-monorepo/apps/frontend":
   version "1.0.0"
@@ -1205,6 +1206,11 @@
   integrity sha512-6c2ogktZ06tr2ENoZivgm7YnprnhYE4ZoXGMY+oA7IuAf17M8FWvujXZGmxLv8y0PTyts4x5A+erSwVUFA8XSg==
   dependencies:
     "@types/superagent" "*"
+
+"@types/uuid@^9.0.8":
+  version "9.0.8"
+  resolved "https://registry.npmjs.org/@types/uuid/-/uuid-9.0.8.tgz"
+  integrity sha512-jg+97EGIcY9AGHJJRaaPVgetKDsrTgbRjQ5Msgjh/DQKEFl0DtyRr/VCOyD1T2R1MNeWPK/u7JoGhlDZnKBAfA==
 
 "@types/validator@^13.11.8":
   version "13.15.2"
@@ -5595,6 +5601,11 @@ utils-merge@^1.0.1, utils-merge@1.0.1:
   version "1.0.1"
   resolved "https://registry.npmjs.org/utils-merge/-/utils-merge-1.0.1.tgz"
   integrity sha512-pMZTvIkT1d+TFGvDOqodOclx0QWkkgi6Tdoa8gC8ffGAAqz9pzPTZWAybbsHHoED/ztMtkv/VoYTYyShUn81hA==
+
+uuid@^9.0.1:
+  version "9.0.1"
+  resolved "https://registry.npmjs.org/uuid/-/uuid-9.0.1.tgz"
+  integrity sha512-b+1eJOlsR9K8HJpow9Ok3fiWOWSIcIzXodvv0rQjVoOVNpWMpxf1wZNpt4y9h10odCNrqnYp1OBzRktckBe3sA==
 
 v8-compile-cache-lib@^3.0.1:
   version "3.0.1"

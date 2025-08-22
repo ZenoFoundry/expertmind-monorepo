@@ -1,4 +1,4 @@
-/* Sidebar Component CSS Module */
+/* Sidebar Component CSS Module - Correcciones para Unified */
 
 .sidebar {
   width: 280px;
@@ -13,8 +13,291 @@
 .header {
   padding: var(--spacing-md);
   border-bottom: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
 }
 
+.header h2 {
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: var(--accent-primary);
+  margin: 0 0 var(--spacing-sm) 0;
+}
+
+/* Contenedor de botones del header */
+.headerActions {
+  display: flex;
+  gap: var(--spacing-sm);
+  align-items: center;
+}
+
+.headerTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.title {
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: var(--accent-primary);
+  margin: 0;
+}
+
+/* Botones de acción mejorados */
+.newChatButton,
+.configButton,
+.authButton {
+  padding: 6px 10px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  min-width: 32px;
+  height: 32px;
+  gap: var(--spacing-xs);
+}
+
+.newChatButton:hover,
+.configButton:hover {
+  background: var(--bg-hover);
+  border-color: var(--accent-primary);
+  transform: translateY(-1px);
+}
+
+.authButton {
+  background: var(--accent-dark);
+  border-color: var(--accent-primary);
+  color: var(--text-primary);
+}
+
+.authButton:hover {
+  background: var(--accent-primary);
+  color: var(--bg-primary);
+}
+
+/* Lista de conversaciones */
+.conversationsList {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--spacing-sm);
+}
+
+/* Items de conversación */
+.conversationItem {
+  padding: var(--spacing-sm);
+  border-radius: var(--border-radius-sm);
+  cursor: pointer;
+  margin-bottom: var(--spacing-xs);
+  background-color: transparent;
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.conversationItem:hover {
+  background-color: var(--bg-hover);
+  border-color: var(--border-color);
+}
+
+.conversationItem.active {
+  background-color: var(--accent-dark);
+  border-color: var(--accent-primary);
+}
+
+.conversationContent {
+  width: 100%;
+}
+
+.conversationHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  margin-bottom: var(--spacing-xs);
+}
+
+.conversationIcon {
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.conversationTitle {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.deleteButton {
+  padding: 4px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-radius: var(--border-radius-sm);
+  opacity: 0;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 12px;
+}
+
+.conversationItem:hover .deleteButton {
+  opacity: 1;
+}
+
+.deleteButton:hover {
+  color: var(--error);
+  background-color: rgba(244, 67, 54, 0.1);
+}
+
+.conversationMeta {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-bottom: var(--spacing-xs);
+  display: flex;
+  gap: var(--spacing-xs);
+  align-items: center;
+}
+
+.lastMessage {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-bottom: var(--spacing-xs);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lastMessage strong {
+  color: var(--accent-primary);
+}
+
+.conversationTime {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+/* Estado vacío */
+.emptyState {
+  padding: var(--spacing-lg);
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.emptyState div:first-child {
+  font-size: 48px;
+  margin-bottom: var(--spacing-md);
+  opacity: 0.7;
+}
+
+.emptyState p {
+  margin: 0 0 var(--spacing-xs) 0;
+  font-size: 0.9rem;
+}
+
+.emptyState p:last-child {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+/* Modal para crear conversación */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modalContent {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: var(--spacing-lg);
+  width: 90%;
+  max-width: 400px;
+  box-shadow: var(--shadow-md);
+}
+
+.modalContent h3 {
+  margin: 0 0 var(--spacing-md) 0;
+  color: var(--text-primary);
+  font-size: 1.1rem;
+}
+
+.modalContent input {
+  width: 100%;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  margin-bottom: var(--spacing-md);
+}
+
+.modalContent input:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+}
+
+.modalContent input::placeholder {
+  color: var(--text-muted);
+}
+
+.modalActions {
+  display: flex;
+  gap: var(--spacing-sm);
+  justify-content: flex-end;
+}
+
+.modalActions button {
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+}
+
+.modalActions button:hover {
+  background: var(--bg-hover);
+  border-color: var(--accent-primary);
+}
+
+.modalActions button:last-child {
+  background: var(--accent-primary);
+  border-color: var(--accent-primary);
+  color: var(--bg-primary);
+}
+
+.modalActions button:last-child:hover {
+  background: var(--accent-secondary);
+  border-color: var(--accent-secondary);
+}
+
+/* Legacy styles for compatibility */
 .headerTop {
   display: flex;
   align-items: center;
@@ -54,12 +337,6 @@
 .sessionsList {
   flex: 1;
   overflow-y: auto;
-}
-
-.emptyState {
-  padding: var(--spacing-md);
-  text-align: center;
-  color: var(--text-muted);
 }
 
 .emptyIcon {
@@ -127,31 +404,6 @@
   margin-bottom: 0;
 }
 
-.deleteButton {
-  padding: 4px;
-  border: none;
-  background: transparent;
-  color: var(--text-muted);
-  cursor: pointer;
-  border-radius: var(--border-radius-sm);
-  opacity: 0;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-/* Show delete button on hover */
-.sessionItem:hover .deleteButton {
-  opacity: 1;
-}
-
-.deleteButton:hover {
-  color: var(--error);
-  background-color: rgba(244, 67, 54, 0.1);
-}
-
 .footer {
   padding: var(--spacing-sm);
   border-top: 1px solid var(--border-color);
@@ -164,7 +416,6 @@
   margin: 0;
 }
 
-/* User Profile Container */
 .userProfileContainer {
   padding: var(--spacing-md);
   border-bottom: 1px solid var(--border-color);
@@ -182,5 +433,17 @@
   
   .deleteButton {
     opacity: 1; /* Always show on mobile for better UX */
+  }
+  
+  .headerActions {
+    flex-wrap: wrap;
+  }
+  
+  .newChatButton,
+  .configButton,
+  .authButton {
+    min-width: 32px;
+    height: 32px;
+    font-size: 12px;
   }
 }

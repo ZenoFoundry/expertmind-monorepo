@@ -25,9 +25,12 @@ async function bootstrap() {
   // Configuración de Swagger para documentación de la API
   const config = new DocumentBuilder()
     .setTitle('ExpertMind API')
-    .setDescription('API para ExpertMind con integración Ollama')
+    .setDescription('API para ExpertMind con integración de IA y gestión de chat')
     .setVersion('1.0')
+    .addBearerAuth()
+    .addTag('auth', 'Endpoints de autenticación')
     .addTag('ollama', 'Endpoints para interactuar con Ollama')
+    .addTag('chat', 'Endpoints de gestión de conversaciones y mensajes')
     .build();
   
   const document = SwaggerModule.createDocument(app, config);

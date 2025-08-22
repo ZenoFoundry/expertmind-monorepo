@@ -10,6 +10,12 @@ const MessageItem: React.FC<MessageItemProps> = ({ message, isLast }) => {
   const [isHovered, setIsHovered] = useState(false);
   const isUser = message.role === 'user';
   const isAssistant = message.role === 'assistant';
+  
+  // Verificar si el mensaje indica un error
+  const isErrorMessage = message.content.includes('❌') || 
+                         message.content.includes('🤖 La IA no está disponible') ||
+                         message.content.includes('🔌 No se puede conectar') ||
+                         message.content.includes('⏱️ La IA tardó demasiado');
 
   // Format timestamp
   const formatTime = (timestamp: Date) => {
@@ -198,16 +204,21 @@ const MessageItem: React.FC<MessageItemProps> = ({ message, isLast }) => {
             borderRadius: 'var(--border-radius)',
             backgroundColor: isUser 
               ? 'var(--primary-color)' 
-              : 'var(--bg-tertiary)',
+              : isErrorMessage
+                ? '#fee2e2' // Fondo rojo claro para errores
+                : 'var(--bg-tertiary)',
             color: isUser 
               ? 'white' 
-              : 'var(--text-primary)',
+              : isErrorMessage
+                ? '#dc2626' // Texto rojo para errores
+                : 'var(--text-primary)',
             lineHeight: '1.5',
             wordWrap: 'break-word',
             whiteSpace: 'pre-wrap',
             fontSize: '0.9rem',
             boxShadow: 'var(--shadow-sm)',
             position: 'relative',
+            border: isErrorMessage ? '1px solid #fca5a5' : 'none',
             ...(isUser ? {
               borderBottomRightRadius: '6px'
             } : {
@@ -229,7 +240,9 @@ const MessageItem: React.FC<MessageItemProps> = ({ message, isLast }) => {
                 : '0 12px 12px 0',
               borderColor: isUser
                 ? `transparent transparent var(--primary-color) transparent`
-                : `transparent var(--bg-tertiary) transparent transparent`
+                : isErrorMessage
+                  ? `transparent #fee2e2 transparent transparent`
+                  : `transparent var(--bg-tertiary) transparent transparent`
             }}
           />
           

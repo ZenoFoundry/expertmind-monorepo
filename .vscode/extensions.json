@@ -1,0 +1,21 @@
+{
+  "recommendations": [
+    "ms-vscode.vscode-typescript-next",
+    "bradlc.vscode-tailwindcss", 
+    "esbenp.prettier-vscode",
+    "ms-vscode.vscode-eslint",
+    "formulahendry.auto-rename-tag",
+    "christian-kohler.path-intellisense",
+    "ms-vscode.vscode-json",
+    "redhat.vscode-yaml",
+    "ms-azuretools.vscode-docker",
+    "ms-vscode.vscode-typescript-next",
+    "bradlc.vscode-tailwindcss",
+    "usernamehw.errorlens",
+    "gruntfuggly.todo-tree",
+    "ms-vscode.vscode-npm-script",
+    "christian-kohler.npm-intellisense",
+    "pflannery.vscode-versionlens",
+    "ms-vscode.test-adapter-converter"
+  ]
+}
