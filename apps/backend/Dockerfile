@@ -1,35 +1,58 @@
-# Dockerfile para el backend de ExpertMind (Monorepo)
-FROM node:18-alpine
+# ===============================
+# STAGE 1: Build
+# ===============================
+FROM node:18-alpine AS builder
 
-# Establecer directorio de trabajo
 WORKDIR /app
 
-# Copiar archivos de dependencias del monorepo
-COPY package.json ./
-COPY yarn.lock ./
-
-# Copiar package.json del backend
+# Copiar archivos de dependencias
+COPY package.json yarn.lock ./
 COPY apps/backend/package.json ./apps/backend/
 
-# Instalar dependencias de todo el monorepo
+# Instalar TODAS las dependencias (incluyendo dev)
 RUN yarn install --frozen-lockfile
 
-# Copiar código fuente del backend
+# Copiar código fuente
 COPY apps/backend ./apps/backend
 
-# Ir al directorio del backend
+# Cambiar al directorio del backend y construir
+WORKDIR /app/apps/backend
+RUN yarn build
+
+# ===============================
+# STAGE 2: Production
+# ===============================
+FROM node:18-alpine AS production
+
+# Crear usuario no-root para seguridad
+RUN addgroup -g 1001 -S nodejs
+RUN adduser -S nestjs -u 1001
+
+WORKDIR /app
+
+# Copiar archivos de dependencias
+COPY package.json yarn.lock ./
+COPY apps/backend/package.json ./apps/backend/
+
+# Instalar SOLO dependencias de producción
+RUN yarn install --production --frozen-lockfile && yarn cache clean
+
+# Copiar el build desde el stage anterior
+COPY --from=builder /app/apps/backend/dist ./apps/backend/dist
+
+# Cambiar al directorio del backend
 WORKDIR /app/apps/backend
 
-# Construir la aplicación
-RUN yarn build
+# Cambiar ownership de archivos
+RUN chown -R nestjs:nodejs /app
+USER nestjs
 
 # Exponer puerto
 EXPOSE 3001
 
-# Variables de entorno por defecto
+# Variables de entorno
 ENV NODE_ENV=production
 ENV PORT=3001
-ENV OLLAMA_URL=http://ollama:11434
 
-# Comando para iniciar la aplicación
+# Comando para iniciar (usar el mismo comando que funciona)
 CMD ["yarn", "start:prod"]

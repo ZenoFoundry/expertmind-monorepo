@@ -10,13 +10,16 @@ export default defineConfig(({ mode }) => {
     plugins: [react()],
     resolve: {
       alias: {
-        "@": path.resolve(__dirname, "./src"),
+        "@": path.resolve(process.cwd(), "./src"), // Usar process.cwd() en lugar de __dirname
       },
     },
     server: {
       port: parseInt(env.VITE_PORT) || 5173,
-      host: env.VITE_HOST || 'localhost',
-      open: true, // Abrir automáticamente en el navegador
+      host: env.VITE_HOST || '0.0.0.0',
+      open: false, // Desactivar open en Docker
+      watch: {
+        usePolling: true, // Necesario para hot reload en Docker
+      },
       proxy: {
         // Proxy para la API de Anthropic
         '/api/anthropic': {
@@ -36,7 +39,7 @@ export default defineConfig(({ mode }) => {
     },
     define: {
       // Variables de entorno para el frontend
-      __API_URL__: JSON.stringify(env.VITE_API_URL || 'http://localhost:3001'),
+      __API_URL__: JSON.stringify(env.VITE_AGENT_API_URL || 'http://localhost:3001'),
     },
   };
 });

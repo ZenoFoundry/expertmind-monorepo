@@ -1,6 +1,29 @@
-version: '3.8'
-
 services:
+  frontend:
+    build:
+      context: ./apps/frontend
+      dockerfile: Dockerfile
+    container_name: expertmind-frontend
+    ports:
+      - "5173:5173"
+    environment:
+      - NODE_ENV=development
+      - VITE_HOST=0.0.0.0
+      - VITE_PORT=5173
+      - VITE_API_URL=http://backend:3001
+      - VITE_AGENT_API_URL=http://agent-api:8000
+    volumes:
+      - ./apps/frontend/src:/app/src
+      - ./apps/frontend/public:/app/public
+      - ./apps/frontend/index.html:/app/index.html
+      - ./apps/frontend/vite.config.ts:/app/vite.config.ts
+    networks:
+      - expertmind
+    restart: unless-stopped
+    depends_on:
+      # - backend
+      - agent-api
+
   backend:
     build:
       context: .
@@ -11,69 +34,76 @@ services:
     environment:
       - NODE_ENV=development
       - PORT=3001
-      - OLLAMA_URL=http://ollama:11434
-    volumes:
-      - ./apps/backend:/app/apps/backend
-      - /app/node_modules
-      - /app/apps/backend/node_modules
+      - JWT_SECRET=your-super-secret-jwt-key-change-in-production
+    develop:
+      watch:
+        # Sincronizar cambios en código fuente
+        - action: sync
+          path: ./apps/backend/src
+          target: /app/apps/backend/src
+        
+        # Reiniciar cuando cambie package.json
+        - action: rebuild
+          path: ./apps/backend/package.json
+          
+        # Sincronizar archivos de configuración
+        - action: sync
+          path: ./apps/backend/.env
+          target: /app/apps/backend/.env
+          
+        # Opcional: reiniciar en cambios críticos
+        - action: rebuild
+          path: ./apps/backend/Dockerfile
     networks:
       - expertmind
-    depends_on:
-      ollama:
-        condition: service_started
     restart: unless-stopped
 
-  ollama:
-    image: ollama/ollama
-    container_name: expertmind-ollama
+  pgvector:
+    image: agnohq/pgvector:16
+    container_name: expertmind-pgvector
+    restart: unless-stopped
     ports:
-      - "11434:11434"
+      - "5432:5432"
     volumes:
-      - ollama_data:/root/.ollama
+      - pgdata:/var/lib/postgresql/data
     environment:
-      - OLLAMA_HOST=0.0.0.0
-      - OLLAMA_ORIGINS=["*"]
-      - OLLAMA_NUM_PARALLEL=4
-      - OLLAMA_MAX_LOADED_MODELS=1
-      - OLLAMA_KEEP_ALIVE=5m
-    restart: unless-stopped
-    networks:
-      - expertmind
-    
-  tinyllama-setup:
-    image: ollama/ollama
-    container_name: expertmind-tinyllama-setup
-    depends_on:
-      - ollama
-    volumes:
-      - ollama_data:/root/.ollama
-    environment:
-      - OLLAMA_HOST=http://ollama:11434
-    command: >
-      sh -c "
-        echo '⏳ Esperando a que Ollama esté disponible...'
-        sleep 20
-        echo '🚀 Instalando TinyLlama (EL MÁS RÁPIDO)...'
-        /bin/ollama pull tinyllama
-        echo '🗑️ Eliminando modelos lentos...'
-        /bin/ollama rm phi3:mini || echo 'phi3:mini no encontrado'
-        /bin/ollama rm gemma2:2b || echo 'gemma2:2b no encontrado'
-        /bin/ollama rm gemma:2b || echo 'gemma:2b no encontrado'
-        echo '🔥 Precargando TinyLlama...'
-        /bin/ollama run tinyllama 'Hello' || true
-        echo '✅ ¡TinyLlama configurado y listo!'
-        echo '📋 Modelos finales:'
-        /bin/ollama list
-        echo '🚀 ¡Sistema ultra-rápido configurado!'
-      "
-    restart: "no"
+      POSTGRES_USER: ${DB_USER:-ai}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-ai}
+      POSTGRES_DB: ${DB_NAME:-ai}
     networks:
       - expertmind
 
-volumes:
-  ollama_data:
-    driver: local
+  agent-api:
+    build:
+      context: ./apps/agent-api
+      dockerfile: Dockerfile
+    image: ${IMAGE_NAME:-agent-api}:${IMAGE_TAG:-latest}
+    container_name: expertmind-agent-api
+    command: uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./apps/agent-api:/app/apps/agent-api
+    environment:
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-your-api-key}
+      DB_HOST: pgvector
+      DB_PORT: 5432
+      DB_USER: ${DB_USER:-ai}
+      DB_PASS: ${DB_PASSWORD:-ai}
+      DB_DATABASE: ${DB_NAME:-ai}
+      WAIT_FOR_DB: "True"
+      PRINT_ENV_ON_LOAD: "True"
+    networks:
+      - expertmind
+    depends_on:
+      - pgvector
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
 networks:
   expertmind:
     driver: bridge
+
+volumes:
+  pgdata:
