@@ -15,6 +15,22 @@ export interface ApiConfig {
   model?: string;
   temperature?: number;
   maxTokens?: number;
+  metadata?: {
+    provider?: 'agno' | 'ollama';
+    agno?: {
+      model: 'gpt-4.1' | 'o4-mini';
+      agent: 'agno_assist' | 'web_agent' | 'finance_agent';
+      systemPrompt?: string;
+      userId?: string;
+      sessionId?: string;
+      stream: boolean;
+    };
+    ollama?: {
+      model: string;
+      contextLength: number;
+      keepAlive?: string;
+    };
+  };
 }
 
 // Tipos para mensajes del chat

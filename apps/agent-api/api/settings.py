@@ -30,6 +30,8 @@ class ApiSettings(BaseSettings):
         valid_cors.append("http://localhost")
         # Add localhost:3000 to cors to allow requests from local Agent UI.
         valid_cors.append("http://localhost:3000")
+        # Add localhost:5173 to cors to allow requests from Vite frontend.
+        valid_cors.append("http://localhost:5173")
 
         return valid_cors
 

@@ -290,15 +290,23 @@ export class ApiManager {
   }
 }
 
-// Configuración por defecto
+// Configuración por defecto - AGNO a través del backend
 export const defaultApiConfig: ApiConfig = {
-  url: 'http://localhost:3001/ollama/chat',
+  url: 'http://localhost:3001', // Backend que se conecta a Agno
   apiKey: '',
   headers: {},
-  timeout: 30000, // 30 segundos
-  model: 'tinyllama', // modelo más rápido para desarrollo
+  timeout: 60000, // 60 segundos para Agno
+  model: 'gpt-4.1', // Modelo más capaz de Agno
   temperature: 0.7,
-  maxTokens: 1000
+  maxTokens: 2000,
+  metadata: {
+    provider: 'agno',
+    agno: {
+      model: 'gpt-4.1',
+      agent: 'agno_assist',
+      stream: false
+    }
+  }
 };
 
 // Configuración para Anthropic (ejemplo)
@@ -310,4 +318,22 @@ export const anthropicApiConfig: ApiConfig = {
   model: 'claude-3-haiku-20240307',
   temperature: 0.7,
   maxTokens: 1024
+};
+
+// Configuración para Ollama (alternativa)
+export const ollamaApiConfig: ApiConfig = {
+  url: 'http://localhost:3001',
+  apiKey: '',
+  headers: {},
+  timeout: 60000,
+  model: 'tinyllama',
+  temperature: 0.7,
+  maxTokens: 2048,
+  metadata: {
+    provider: 'ollama',
+    ollama: {
+      model: 'tinyllama',
+      contextLength: 2048
+    }
+  }
 };
