@@ -1,6 +1,7 @@
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { IAIProvider, AIMessageRequest, AIMessageResponse, AIModel, ValidationResult } from '../interfaces/ai-provider.interface';
-import { OllamaService } from '../../ollama/services/ollama.service';
+import { AgnoService } from '../../agno/services/agno.service';
+import { AgnoModel } from '../../agno/dtos/agno-request.dto';
 
 @Injectable()
 export class AIProviderService {
@@ -8,10 +9,10 @@ export class AIProviderService {
   private providers: Map<string, IAIProvider> = new Map();
 
   constructor(
-    private readonly ollamaService: OllamaService
+    private readonly agnoService: AgnoService
   ) {
     // Registrar proveedores disponibles
-    this.registerProvider(new OllamaAIProvider(ollamaService));
+    this.registerProvider(new AgnoAIProvider(agnoService));
   }
 
   registerProvider(provider: IAIProvider): void {
@@ -20,15 +21,31 @@ export class AIProviderService {
   }
 
   getProvider(name: string): IAIProvider {
-    const provider = this.providers.get(name);
+    // Mapear proveedores deprecados a nuevos proveedores
+    const providerMap: Record<string, string> = {
+      'ollama': 'agno', // Mapear ollama a agno automáticamente
+    };
+    
+    const actualProviderName = providerMap[name] || name;
+    
+    const provider = this.providers.get(actualProviderName);
     if (!provider) {
-      throw new BadRequestException(`AI provider '${name}' not found`);
+      throw new BadRequestException(`AI provider '${actualProviderName}' not found`);
     }
+    
+    // Log del mapeo si es diferente
+    if (actualProviderName !== name) {
+      this.logger.log(`Mapped provider '${name}' to '${actualProviderName}'`);
+    }
+    
     return provider;
   }
 
   getAvailableProviders(): string[] {
-    return Array.from(this.providers.keys());
+    const actualProviders = Array.from(this.providers.keys());
+    // Incluir también los mapeos para compatibilidad
+    const mappedProviders = ['ollama']; // ollama mapea a agno
+    return [...actualProviders, ...mappedProviders];
   }
 
   async sendMessage(providerName: string, request: AIMessageRequest): Promise<AIMessageResponse> {
@@ -75,34 +92,49 @@ export class AIProviderService {
 }
 
 // ===============================
-// ollama-ai-provider.ts
+// agno-ai-provider.ts
 // ===============================
-class OllamaAIProvider implements IAIProvider {
-  readonly name = 'ollama';
-  readonly supportedModels: string[] = []; // Se cargará dinámicamente
+class AgnoAIProvider implements IAIProvider {
+  readonly name = 'agno';
+  readonly supportedModels: string[] = [
+    AgnoModel.GPT_4_1,
+    AgnoModel.O4_MINI
+  ];
 
-  constructor(private readonly ollamaService: OllamaService) {}
+  constructor(private readonly agnoService: AgnoService) {}
 
   async sendMessage(request: AIMessageRequest): Promise<AIMessageResponse> {
     try {
-      const ollamaRequest = {
-        model: request.model,
-        messages: request.messages,
-        options: request.settings
+      // Convertir mensajes al formato de Agno
+      const message = this.formatMessagesForAgno(request.messages);
+      
+      // Mapear modelo si es necesario
+      const agnoModel = this.mapToAgnoModel(request.model);
+
+      const agnoRequest = {
+        message,
+        model: agnoModel,
+        stream: false, // Por ahora no soportamos streaming
+        user_id: request.userId,
+        session_id: request.sessionId,
       };
 
-      const response = await this.ollamaService.chat(ollamaRequest);
+      const response = await this.agnoService.runDefaultAgent(agnoRequest);
       
       return {
-        content: response.message?.content || '',
+        content: response.content,
         metadata: {
           model: request.model,
-          tokensUsed: (response.prompt_eval_count || 0) + (response.eval_count || 0),
+          tokensUsed: 0, // Agno no proporciona esta información por ahora
           processingTimeMs: 0, // Se calculará en AIProviderService
-          finishReason: response.done ? 'stop' : 'incomplete'
+          finishReason: 'stop',
+          agentId: response.metadata?.agent_id,
+          userId: response.metadata?.user_id,
+          sessionId: response.metadata?.session_id,
         }
       };
     } catch (error) {
+      this.logger.error('Error en AgnoAIProvider:', error);
       return {
         content: '',
         metadata: {
@@ -116,20 +148,33 @@ class OllamaAIProvider implements IAIProvider {
 
   async getAvailableModels(): Promise<AIModel[]> {
     try {
-      const models = await this.ollamaService.getModels();
-      return models.map(model => ({
-        name: model.name,
-        displayName: model.name,
-        description: `Ollama model: ${model.name}`,
-        maxTokens: 4096, // valor por defecto
-        supportedFeatures: ['chat', 'completion'],
-        metadata: {
-          size: model.size,
-          modified_at: model.modified_at
+      // Devolver modelos estáticos por ahora
+      return [
+        {
+          name: AgnoModel.GPT_4_1,
+          displayName: 'GPT-4.1',
+          description: 'Agno GPT-4.1 model with advanced reasoning capabilities',
+          maxTokens: 8192,
+          supportedFeatures: ['chat', 'completion', 'function_calling'],
+          metadata: {
+            provider: 'agno',
+            type: 'chat'
+          }
+        },
+        {
+          name: AgnoModel.O4_MINI,
+          displayName: 'O4 Mini',
+          description: 'Agno O4 Mini model for faster responses',
+          maxTokens: 4096,
+          supportedFeatures: ['chat', 'completion'],
+          metadata: {
+            provider: 'agno',
+            type: 'chat'
+          }
         }
-      }));
+      ];
     } catch (error) {
-      throw new Error(`Failed to get Ollama models: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(`Failed to get Agno models: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -137,28 +182,17 @@ class OllamaAIProvider implements IAIProvider {
     const errors: string[] = [];
     const warnings: string[] = [];
 
-    if (settings.temperature !== undefined) {
-      if (typeof settings.temperature !== 'number' || settings.temperature < 0 || settings.temperature > 2) {
-        errors.push('Temperature must be a number between 0 and 2');
-      }
+    // Validaciones específicas para Agno
+    if (settings.model && !this.supportedModels.includes(settings.model)) {
+      errors.push(`Model '${settings.model}' is not supported. Supported models: ${this.supportedModels.join(', ')}`);
     }
 
-    if (settings.maxTokens !== undefined) {
-      if (typeof settings.maxTokens !== 'number' || settings.maxTokens <= 0) {
-        errors.push('maxTokens must be a positive number');
-      }
+    if (settings.userId && typeof settings.userId !== 'string') {
+      errors.push('userId must be a string');
     }
 
-    if (settings.topP !== undefined) {
-      if (typeof settings.topP !== 'number' || settings.topP < 0 || settings.topP > 1) {
-        errors.push('topP must be a number between 0 and 1');
-      }
-    }
-
-    if (settings.topK !== undefined) {
-      if (typeof settings.topK !== 'number' || settings.topK < 1) {
-        errors.push('topK must be a positive integer');
-      }
+    if (settings.sessionId && typeof settings.sessionId !== 'string') {
+      errors.push('sessionId must be a string');
     }
 
     return {
@@ -170,9 +204,44 @@ class OllamaAIProvider implements IAIProvider {
 
   async isHealthy(): Promise<boolean> {
     try {
-      return await this.ollamaService.isOllamaReady();
+      return await this.agnoService.isAgnoReady();
     } catch (error) {
       return false;
     }
   }
+
+  /**
+   * Convierte los mensajes del formato estándar al formato que espera Agno
+   */
+  private formatMessagesForAgno(messages: Array<{ role: string; content: string }>): string {
+    // Si hay múltiples mensajes, combinarlos en un solo string
+    // Agno espera un mensaje simple, no un array de mensajes
+    
+    if (messages.length === 1) {
+      return messages[0].content;
+    }
+
+    // Si hay múltiples mensajes, formatear como conversación
+    return messages
+      .map(msg => `${msg.role.toUpperCase()}: ${msg.content}`)
+      .join('\n\n');
+  }
+
+  /**
+   * Mapea modelos del sistema estándar a modelos de Agno
+   */
+  private mapToAgnoModel(model: string): AgnoModel {
+    // Mapeo de modelos comunes a modelos de Agno
+    const modelMap: Record<string, AgnoModel> = {
+      'gpt-4': AgnoModel.GPT_4_1,
+      'gpt-4.1': AgnoModel.GPT_4_1,
+      'gpt-4-turbo': AgnoModel.GPT_4_1,
+      'o4-mini': AgnoModel.O4_MINI,
+      'gpt-3.5-turbo': AgnoModel.O4_MINI, // Fallback a modelo más pequeño
+    };
+
+    return modelMap[model] || AgnoModel.GPT_4_1; // Default a GPT-4.1
+  }
+
+  private readonly logger = new Logger(AgnoAIProvider.name);
 }

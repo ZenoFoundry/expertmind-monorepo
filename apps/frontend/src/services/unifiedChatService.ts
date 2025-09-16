@@ -100,7 +100,7 @@ export class UnifiedChatService {
       id: session.id,
       title: session.name,
       model: 'unknown', // localStorage no tiene esta info
-      provider: 'ollama', // Asumimos Ollama por defecto
+      provider: 'agno', // Asumimos Agno por defecto
       messageCount: session.messageCount,
       lastActivity: session.updatedAt,
       createdAt: session.createdAt,
@@ -318,8 +318,8 @@ export class UnifiedChatService {
     // Fallback para modo offline
     return [
       {
-        name: 'ollama',
-        models: ['llama2', 'codellama', 'mistral'], // Modelos por defecto
+        name: 'agno',
+        models: ['gpt-4.1', 'o4-mini'], // Modelos por defecto de Agno
         isHealthy: true
       }
     ];

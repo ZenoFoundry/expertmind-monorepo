@@ -1,3 +1,61 @@
+## 🔄 Migración de Ollama a Agno - Resumen Ejecutivo
+
+### Contexto
+
+El proyecto ExpertMind utilizaba originalmente Ollama como proveedor de IA local. Para mejorar la escalabilidad y capacidades del sistema, se migró a Agno, un framework que permite el uso de modelos de OpenAI y otros proveedores cloud.
+
+### Implementación de Compatibilidad Backward
+
+#### Problema
+- El frontend estaba configurado para usar el proveedor 'ollama'
+- Cambiar el frontend requeriría modificaciones extensas
+- Se necesitaba una transición suave sin romper la funcionalidad existente
+
+#### Solución Implementada
+Se implementó un sistema de mapeo automático en el `AIProviderService` que:
+
+1. **Mapeo Transparente**: Cuando el frontend solicita el proveedor 'ollama', automáticamente se mapea a 'agno'
+2. **Compatibilidad de Proveedores**: El método `getAvailableProviders()` incluye tanto 'agno' como 'ollama' para mantener compatibilidad
+3. **Logging de Transición**: Se registra cuando ocurre el mapeo para facilitar debugging
+
+#### Arquitectura de la Migración
+
+```
+Frontend (provider: 'ollama') 
+    ↓
+ChatService 
+    ↓
+AIProviderService.getProvider('ollama') 
+    ↓ [mapeo automático]
+AgnoAIProvider (provider: 'agno')
+    ↓
+AgnoService → API de Agno → OpenAI GPT-4.1
+```
+
+### Beneficios Obtenidos
+
+- **Cero Downtime**: La migración se realizó sin interrumpir el servicio
+- **Compatibilidad Backward**: El frontend no requirió cambios
+- **Escalabilidad**: Acceso a modelos de OpenAI (GPT-4.1, O4-Mini)
+- **Mantenibilidad**: Eliminación del módulo Ollama obsoleto
+- **Flexibilidad**: Fácil adición de nuevos proveedores en el futuro
+
+### Configuración Técnica
+
+#### Cambios en el Backend
+- Actualización del `AIProviderService` con mapeo automático
+- Integración del `AgnoModule` reemplazando `OllamaModule`
+- Configuración de variables de entorno para Agno y OpenAI
+
+#### Configuración Docker
+- Migración de Node.js 18 a 20 para compatibilidad
+- Configuración del servicio `agent-api` con Agno
+- Sincronización de variables de entorno entre contenedores
+
+### Resultado
+
+La migración fue exitosa, manteniendo toda la funcionalidad existente mientras se migra a una infraestructura más robusta y escalable. El sistema ahora utiliza Agno como intermediario para acceder a modelos de OpenAI, sin impacto en la experiencia del usuario final.
+
 # 🧠 ExpertMind - AI-Powered Chat Application
 
 <div align="center">

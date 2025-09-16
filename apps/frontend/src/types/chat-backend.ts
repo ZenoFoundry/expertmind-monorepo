@@ -7,7 +7,7 @@
 export interface BackendConversation {
   id: string;
   title: string;
-  aiProvider: 'ollama' | 'anthropic' | 'openai';
+  aiProvider: 'agno' | 'anthropic' | 'openai';
   model: string;
   systemPrompt?: string;
   settings: {
@@ -61,7 +61,7 @@ export interface BackendMessage {
 
 export interface CreateConversationRequest {
   title: string;
-  aiProvider: 'ollama' | 'anthropic' | 'openai';
+  aiProvider: 'agno' | 'anthropic' | 'openai';
   model: string;
   systemPrompt?: string;
   settings?: {

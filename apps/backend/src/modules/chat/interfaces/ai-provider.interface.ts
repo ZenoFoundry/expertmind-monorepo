@@ -28,6 +28,7 @@ export interface AIMessageRequest {
   };
   conversationId?: string;
   userId?: string;
+  sessionId?: string;
 }
 
 export interface AIMessageResponse {

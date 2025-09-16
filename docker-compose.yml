@@ -1,17 +1,46 @@
-version: '3.8'
+# Docker Compose para ExpertMind con Agno
+# Configuración optimizada para desarrollo
 
 services:
+  # Frontend service (desarrollo)
+  frontend:
+    build:
+      context: .
+      dockerfile: ./apps/frontend/Dockerfile.dev
+    container_name: expertmind-frontend
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:3001
+      - VITE_HOST=0.0.0.0
+      - VITE_PORT=5173
+    volumes:
+      - ./apps/frontend:/app/apps/frontend
+      - /app/node_modules
+      - /app/apps/frontend/node_modules
+    networks:
+      - expertmind
+    depends_on:
+      - backend
+    restart: unless-stopped
+    command: npm run dev --workspace=apps/frontend -- --host 0.0.0.0
+
+  # Backend service que se conecta a agent-api
   backend:
     build:
       context: .
-      dockerfile: ./apps/backend/Dockerfile
+      dockerfile: ./apps/backend/Dockerfile.dev
     container_name: expertmind-backend
     ports:
       - "3001:3001"
     environment:
       - NODE_ENV=development
       - PORT=3001
-      - OLLAMA_URL=http://ollama:11434
+      - AGNO_API_URL=http://agent-api:8000
+      - AGNO_DEFAULT_AGENT_ID=agno_assist
+      - AGNO_API_TIMEOUT=60000
+      - JWT_SECRET=${JWT_SECRET:-your-super-secret-jwt-key-change-in-production}
+      - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-7d}
     volumes:
       - ./apps/backend:/app/apps/backend
       - /app/node_modules
@@ -19,59 +48,65 @@ services:
     networks:
       - expertmind
     depends_on:
-      ollama:
-        condition: service_started
+      agent-api:
+        condition: service_healthy
     restart: unless-stopped
+    command: npm run start:dev --workspace=apps/backend
 
-  ollama:
-    image: ollama/ollama
-    container_name: expertmind-ollama
+  # Agent API service usando Agno
+  agent-api:
+    build:
+      context: ./apps/agent-api
+      dockerfile: Dockerfile
+    container_name: expertmind-agent-api
     ports:
-      - "11434:11434"
-    volumes:
-      - ollama_data:/root/.ollama
+      - "8000:8000"
     environment:
-      - OLLAMA_HOST=0.0.0.0
-      - OLLAMA_ORIGINS=["*"]
-      - OLLAMA_NUM_PARALLEL=4
-      - OLLAMA_MAX_LOADED_MODELS=1
-      - OLLAMA_KEEP_ALIVE=5m
-    restart: unless-stopped
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_DATABASE=agent_api
+      - DB_USER=postgres
+      - DB_PASS=postgres
+      - DOCS_ENABLED=true
+      - CORS_ORIGINS=["http://localhost:3000","http://localhost:3001","http://localhost:5173","https://app.agno.com"]
+    volumes:
+      - ./apps/agent-api:/app
     networks:
       - expertmind
-    
-  tinyllama-setup:
-    image: ollama/ollama
-    container_name: expertmind-tinyllama-setup
     depends_on:
-      - ollama
-    volumes:
-      - ollama_data:/root/.ollama
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    command: python -m uvicorn api.main:app --host 0.0.0.0 --port 8000
+
+  # PostgreSQL database for agent-api
+  postgres:
+    image: postgres:16  # Cambiado de 15 a 16 para compatibilidad
+    container_name: expertmind-postgres
     environment:
-      - OLLAMA_HOST=http://ollama:11434
-    command: >
-      sh -c "
-        echo '⏳ Esperando a que Ollama esté disponible...'
-        sleep 20
-        echo '🚀 Instalando TinyLlama (EL MÁS RÁPIDO)...'
-        /bin/ollama pull tinyllama
-        echo '🗑️ Eliminando modelos lentos...'
-        /bin/ollama rm phi3:mini || echo 'phi3:mini no encontrado'
-        /bin/ollama rm gemma2:2b || echo 'gemma2:2b no encontrado'
-        /bin/ollama rm gemma:2b || echo 'gemma:2b no encontrado'
-        echo '🔥 Precargando TinyLlama...'
-        /bin/ollama run tinyllama 'Hello' || true
-        echo '✅ ¡TinyLlama configurado y listo!'
-        echo '📋 Modelos finales:'
-        /bin/ollama list
-        echo '🚀 ¡Sistema ultra-rápido configurado!'
-      "
-    restart: "no"
+      - POSTGRES_DB=agent_api
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
     networks:
       - expertmind
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
 
 volumes:
-  ollama_data:
+  postgres_data:
     driver: local
 
 networks:

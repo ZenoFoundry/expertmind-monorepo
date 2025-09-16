@@ -15,14 +15,14 @@ import { AIProviderService } from './services/ai-provider.service';
 import { ConversationOwnershipGuard } from './guards/conversation-ownership.guard';
 
 // External modules
-import { OllamaModule } from '../ollama/ollama.module';
+import { AgnoModule } from '../agno/agno.module';
 import { AuthModule } from '../auth/auth.module';
 
 @Module({
   imports: [
     ConfigModule,
     HttpModule,
-    OllamaModule, // Para reutilizar el servicio de Ollama existente
+    AgnoModule,  // Reemplazamos OllamaModule por AgnoModule
     AuthModule   // Para los guards de autenticación
   ],
   controllers: [

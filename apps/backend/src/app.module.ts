@@ -3,7 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { HttpModule } from '@nestjs/axios';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { OllamaModule } from './modules/ollama/ollama.module';
+import { AgnoModule } from './modules/agno/agno.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { ChatModule } from './modules/chat/chat.module';
 
@@ -14,7 +14,7 @@ import { ChatModule } from './modules/chat/chat.module';
       envFilePath: ['.env.local', '.env'],
     }),
     HttpModule,
-    OllamaModule,
+    AgnoModule,  // Reemplazamos OllamaModule por AgnoModule
     AuthModule,
     ChatModule,
   ],

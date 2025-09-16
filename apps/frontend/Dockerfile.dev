@@ -1,0 +1,33 @@
+# Dockerfile para desarrollo del frontend
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Instalar dependencias globales
+RUN npm install -g npm@latest
+
+# Copiar archivos de configuración del workspace
+COPY package*.json ./
+COPY yarn.lock ./
+
+# Instalar dependencias del monorepo
+RUN npm install
+
+# Copiar archivos de configuración del frontend
+COPY apps/frontend/package*.json ./apps/frontend/
+
+# Instalar dependencias específicas del frontend
+WORKDIR /app/apps/frontend
+RUN npm install
+
+# Volver al directorio de trabajo principal
+WORKDIR /app
+
+# Copiar código fuente
+COPY apps/frontend ./apps/frontend
+
+# Exponer puerto
+EXPOSE 5173
+
+# Comando por defecto
+CMD ["npm", "run", "dev", "--workspace=apps/frontend"]
