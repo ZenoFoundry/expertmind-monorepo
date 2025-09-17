@@ -15,12 +15,12 @@ export class CreateConversationDto {
 
   @ApiProperty({
     description: 'AI provider to use',
-    enum: ['ollama', 'anthropic', 'openai'],
-    example: 'ollama'
+    enum: ['agno', 'ollama', 'anthropic', 'openai'],
+    example: 'agno'
   })
   @IsString()
-  @IsIn(['ollama', 'anthropic', 'openai'])
-  aiProvider: 'ollama' | 'anthropic' | 'openai';
+  @IsIn(['agno', 'ollama', 'anthropic', 'openai'])
+  aiProvider: 'agno' | 'ollama' | 'anthropic' | 'openai';
 
   @ApiProperty({
     description: 'AI model to use',

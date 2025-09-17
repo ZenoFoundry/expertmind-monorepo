@@ -21,31 +21,16 @@ export class AIProviderService {
   }
 
   getProvider(name: string): IAIProvider {
-    // Mapear proveedores deprecados a nuevos proveedores
-    const providerMap: Record<string, string> = {
-      'ollama': 'agno', // Mapear ollama a agno automáticamente
-    };
-    
-    const actualProviderName = providerMap[name] || name;
-    
-    const provider = this.providers.get(actualProviderName);
+    const provider = this.providers.get(name);
     if (!provider) {
-      throw new BadRequestException(`AI provider '${actualProviderName}' not found`);
-    }
-    
-    // Log del mapeo si es diferente
-    if (actualProviderName !== name) {
-      this.logger.log(`Mapped provider '${name}' to '${actualProviderName}'`);
+      throw new BadRequestException(`AI provider '${name}' not found`);
     }
     
     return provider;
   }
 
   getAvailableProviders(): string[] {
-    const actualProviders = Array.from(this.providers.keys());
-    // Incluir también los mapeos para compatibilidad
-    const mappedProviders = ['ollama']; // ollama mapea a agno
-    return [...actualProviders, ...mappedProviders];
+    return Array.from(this.providers.keys());
   }
 
   async sendMessage(providerName: string, request: AIMessageRequest): Promise<AIMessageResponse> {

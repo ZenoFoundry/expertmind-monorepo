@@ -194,7 +194,7 @@ export class UnifiedChatService {
       try {
         const request = {
           title: action.title,
-          aiProvider: (action.provider as any) || 'ollama',
+          aiProvider: (action.provider as any) || 'agno',
           model: action.model,
           systemPrompt: action.systemPrompt,
           settings: action.settings

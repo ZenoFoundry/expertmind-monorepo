@@ -68,7 +68,7 @@ export interface PaginatedResult<T> {
 
 export interface CreateConversationData {
   title: string;
-  aiProvider: 'ollama' | 'anthropic' | 'openai';
+  aiProvider: 'agno' | 'ollama' | 'anthropic' | 'openai';
   model: string;
   systemPrompt?: string;
   settings?: Record<string, any>;
@@ -76,7 +76,7 @@ export interface CreateConversationData {
 
 export interface UpdateConversationData {
   title?: string;
-  aiProvider?: 'ollama' | 'anthropic' | 'openai';
+  aiProvider?: 'agno' | 'ollama' | 'anthropic' | 'openai';
   model?: string;
   systemPrompt?: string;
   settings?: Record<string, any>;

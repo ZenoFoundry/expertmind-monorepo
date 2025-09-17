@@ -21,10 +21,10 @@ export class Conversation {
 
   @ApiProperty({
     description: 'AI provider being used',
-    enum: ['ollama', 'anthropic', 'openai'],
-    example: 'ollama'
+    enum: ['agno', 'ollama', 'anthropic', 'openai'],
+    example: 'agno'
   })
-  aiProvider: 'ollama' | 'anthropic' | 'openai';
+  aiProvider: 'agno' | 'ollama' | 'anthropic' | 'openai';
 
   @ApiProperty({
     description: 'AI model being used',
