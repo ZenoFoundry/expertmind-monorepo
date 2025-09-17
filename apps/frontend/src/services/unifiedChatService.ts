@@ -99,8 +99,8 @@ export class UnifiedChatService {
     return {
       id: session.id,
       title: session.name,
-      model: 'unknown', // localStorage no tiene esta info
-      provider: 'agno', // Asumimos Agno por defecto
+      model: 'gpt-4.1', // Usar modelo de Agno por defecto
+      provider: 'agno', // Cambiar provider por defecto
       messageCount: session.messageCount,
       lastActivity: session.updatedAt,
       createdAt: session.createdAt,

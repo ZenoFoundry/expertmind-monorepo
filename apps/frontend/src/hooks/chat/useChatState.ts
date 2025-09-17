@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { unifiedChatService } from '../../services/unifiedChatService';
 import { authService } from '../../services/authService';
+import { useAuth } from '../../components/Auth/AuthProvider';
 import {
   UnifiedConversation,
   UnifiedMessage,
@@ -45,9 +46,16 @@ export interface UseChatStateReturn {
   // Utilidades
   clearError: () => void;
   getAvailableProviders: () => Promise<any[]>;
+  updateApiConfig: (config: ApiConfig) => void;
 }
 
 export function useChatState(apiConfig?: ApiConfig): UseChatStateReturn {
+  // ===============================
+  // INTEGRACIÓN CON AUTH PROVIDER
+  // ===============================
+  
+  const { isAuthenticated: authIsAuthenticated } = useAuth();
+  
   // ===============================
   // ESTADO LOCAL
   // ===============================
@@ -60,13 +68,21 @@ export function useChatState(apiConfig?: ApiConfig): UseChatStateReturn {
     activeConversationId: null,
     messages: [],
     apiConfig: apiConfig || {
-      url: 'http://localhost:3001/ollama/chat',
+      url: 'http://localhost:3001',
       apiKey: '',
       headers: {},
-      timeout: 30000,
-      model: 'tinyllama',
+      timeout: 60000,
+      model: 'gpt-4.1',
       temperature: 0.7,
-      maxTokens: 1000
+      maxTokens: 2000,
+      metadata: {
+        provider: 'agno',
+        agno: {
+          model: 'gpt-4.1',
+          agent: 'agno_assist',
+          stream: false
+        }
+      }
     },
     sync: {
       pendingSync: false,
@@ -111,6 +127,14 @@ export function useChatState(apiConfig?: ApiConfig): UseChatStateReturn {
       window.removeEventListener('offline', handleOnlineChange);
     };
   }, []);
+
+  // Efecto para reaccionar a cambios de autenticación
+  useEffect(() => {
+    console.log('🔄 Auth state changed:', authIsAuthenticated);
+    if (mountedRef.current) {
+      handleModeChange();
+    }
+  }, [authIsAuthenticated]);
 
   // Efecto para monitorear cambios en la conversación activa
   useEffect(() => {
@@ -441,12 +465,21 @@ export function useChatState(apiConfig?: ApiConfig): UseChatStateReturn {
     return unifiedChatService.getStatusInfo();
   }, []);
 
+  const updateApiConfig = useCallback((newConfig: ApiConfig) => {
+    safeSetState(prev => ({
+      ...prev,
+      apiConfig: newConfig
+    }));
+    console.log('💾 API Configuration updated:', newConfig);
+  }, [safeSetState]);
+
   // ===============================
   // VALORES DERIVADOS
   // ===============================
 
   const activeConversation = state.conversations.find(c => c.id === state.activeConversationId) || null;
-  const isAuthenticated = authService.isAuthenticated();
+  // Usar el estado reactivo de AuthProvider en lugar de authService directo
+  const isAuthenticated = authIsAuthenticated;
 
   // ===============================
   // RETURN
@@ -485,6 +518,7 @@ export function useChatState(apiConfig?: ApiConfig): UseChatStateReturn {
     
     // Utilidades
     clearError,
-    getAvailableProviders
+    getAvailableProviders,
+    updateApiConfig
   };
 }

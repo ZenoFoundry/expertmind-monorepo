@@ -32,7 +32,7 @@ const ConfigPanelUnified: React.FC<ConfigPanelUnifiedProps> = ({
   onClose
 }) => {
   // Estado principal
-  const [provider, setProvider] = useState<Provider>('ollama');
+  const [provider, setProvider] = useState<Provider>('agno');
   const [config, setConfig] = useState<ApiConfig>(apiConfig);
   const [isTestingConnection, setIsTestingConnection] = useState(false);
   const [testResult, setTestResult] = useState<string | null>(null);
@@ -69,8 +69,10 @@ const ConfigPanelUnified: React.FC<ConfigPanelUnifiedProps> = ({
       }
     } else if (config.url.includes('agno') || config.url.includes('agent-api') || config.url.includes('8000')) {
       setProvider('agno');
-    } else {
+    } else if (config.url.includes('ollama') || config.url.includes('11434')) {
       setProvider('ollama');
+    } else {
+      setProvider('agno'); // Default a Agno si no se puede detectar
     }
   }, [config.url, config.metadata]);
 

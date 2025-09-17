@@ -47,6 +47,7 @@ export const ChatAreaUnified: React.FC<ChatAreaUnifiedProps> = ({
       // Filtrar mensajes vacíos o solo con espacios en blanco
       return msg.content && msg.content.trim().length > 0;
     })
+    .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
     .map(msg => ({
       id: msg.id,
       content: msg.content,
