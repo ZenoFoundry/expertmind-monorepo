@@ -25,6 +25,27 @@ services:
     restart: unless-stopped
     command: npm run dev --workspace=apps/frontend -- --host 0.0.0.0
 
+  # Backoffice service (desarrollo) - Configuración simplificada
+  backoffice:
+    build:
+      context: ./apps/backoffice
+      dockerfile: Dockerfile.simple
+    container_name: expertmind-backoffice
+    ports:
+      - "5174:5174"
+    environment:
+      - VITE_API_URL=http://localhost:3001
+      - VITE_HOST=0.0.0.0
+      - VITE_PORT=5174
+    volumes:
+      - ./apps/backoffice:/app
+      - /app/node_modules
+    networks:
+      - expertmind
+    depends_on:
+      - backend
+    restart: unless-stopped
+
   # Backend service que se conecta a agent-api
   backend:
     build:
@@ -69,7 +90,7 @@ services:
       - DB_USER=postgres
       - DB_PASS=postgres
       - DOCS_ENABLED=true
-      - CORS_ORIGINS=["http://localhost:3000","http://localhost:3001","http://localhost:5173","https://app.agno.com"]
+      - CORS_ORIGINS=["http://localhost:3000","http://localhost:3001","http://localhost:5173","http://localhost:5174","https://app.agno.com"]
     volumes:
       - ./apps/agent-api:/app
     networks:
@@ -88,7 +109,7 @@ services:
 
   # PostgreSQL database for agent-api
   postgres:
-    image: postgres:16  # Cambiado de 15 a 16 para compatibilidad
+    image: postgres:16
     container_name: expertmind-postgres
     environment:
       - POSTGRES_DB=agent_api
