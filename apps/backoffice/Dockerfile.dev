@@ -1,0 +1,38 @@
+# Multi-stage build para el backoffice
+FROM node:18-alpine as base
+
+# Instalar dependencias del sistema necesarias
+RUN apk add --no-cache git python3 make g++
+
+# Establecer directorio de trabajo
+WORKDIR /app
+
+# Copiar archivos de configuración del workspace raíz
+COPY package*.json yarn.lock* ./
+
+# Copiar package.json específico del backoffice
+COPY apps/backoffice/package*.json ./apps/backoffice/
+
+# Instalar todas las dependencias
+RUN npm install
+
+# Desarrollo stage
+FROM base as development
+
+# Copiar todo el código fuente
+COPY . .
+
+# Establecer el directorio del backoffice
+WORKDIR /app/apps/backoffice
+
+# Asegurar que las dependencias del backoffice estén instaladas
+RUN npm install
+
+# Volver al directorio raíz
+WORKDIR /app
+
+# Exponer el puerto
+EXPOSE 5174
+
+# Comando para desarrollo
+CMD ["npm", "run", "dev", "--workspace=apps/backoffice", "--", "--host", "0.0.0.0", "--port", "5174"]
