@@ -8,5 +8,15 @@
     "updatedAt": "2025-08-15T03:35:52.964Z",
     "isActive": true,
     "password": "$2b$12$clAnRPPanL0x.chJUjBGHOTXXzCOjehqF6FNhxVSrY9WzLWKx.czm"
+  },
+  {
+    "id": "0740184a-a8e9-4aee-98cf-48086cc72238",
+    "email": "admin@expertmind.com",
+    "name": "Admin User",
+    "avatar": "https://ui-avatars.com/api/?name=Admin%20User&background=00bcd4&color=fff&size=128",
+    "createdAt": "2025-09-24T01:21:32.000Z",
+    "updatedAt": "2025-09-24T01:21:32.000Z",
+    "isActive": true,
+    "password": "$2b$12$OXKJ9HUOb2LapE3SO9O4seP.NVdqT7P9gQiG4oM6YgtZzOfTqMvEC"
   }
 ]

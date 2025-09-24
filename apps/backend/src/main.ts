@@ -29,7 +29,6 @@ async function bootstrap() {
     .setVersion('1.0')
     .addBearerAuth()
     .addTag('auth', 'Endpoints de autenticación')
-    .addTag('ollama', 'Endpoints para interactuar con Ollama')
     .addTag('chat', 'Endpoints de gestión de conversaciones y mensajes')
     .build();
   

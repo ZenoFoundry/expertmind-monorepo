@@ -1,5 +1,8 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 import { v4 as uuidv4 } from 'uuid';
+import { ConversationEntity, ConversationDocument } from '../schemas/conversation.schema';
 import { Conversation } from '../entities/conversation.entity';
 import { 
   IConversationService, 
@@ -12,14 +15,16 @@ import {
 
 @Injectable()
 export class ConversationService implements IConversationService {
-  // En una implementación real, esto sería inyectado como un repositorio
-  private conversations: Map<string, Conversation> = new Map();
+  
+  constructor(
+    @InjectModel(ConversationEntity.name) 
+    private conversationModel: Model<ConversationDocument>
+  ) {}
 
   async create(data: CreateConversationData & { userId: string }): Promise<Conversation> {
     const id = `conv_${uuidv4()}`;
-    const now = new Date();
-
-    const conversation: Conversation = {
+    
+    const conversationData = {
       id,
       title: data.title,
       userId: data.userId,
@@ -28,54 +33,46 @@ export class ConversationService implements IConversationService {
       systemPrompt: data.systemPrompt,
       settings: data.settings || {},
       messageCount: 0,
-      lastActivity: now,
-      createdAt: now,
-      updatedAt: now,
+      lastActivity: new Date(),
       isActive: true,
       metadata: {}
     };
 
-    this.conversations.set(id, conversation);
-    return conversation;
+    const createdConversation = new this.conversationModel(conversationData);
+    const savedConversation = await createdConversation.save();
+    
+    return this.toConversationEntity(savedConversation);
   }
 
   async findByUser(userId: string, options: FindOptions = {}): Promise<Conversation[]> {
-    const userConversations = Array.from(this.conversations.values())
-      .filter(conv => conv.userId === userId);
+    const query = this.conversationModel.find({ userId, isActive: true });
 
-    // Aplicar filtros
-    let filtered = userConversations;
+    // Aplicar filtros adicionales
     if (options.where) {
-      filtered = filtered.filter(conv => {
-        return Object.entries(options.where!).every(([key, value]) => {
-          return (conv as any)[key] === value;
-        });
+      Object.entries(options.where).forEach(([key, value]) => {
+        query.where(key).equals(value);
       });
     }
 
     // Aplicar ordenamiento
     if (options.orderBy) {
-      filtered.sort((a, b) => {
-        const aVal = (a as any)[options.orderBy!];
-        const bVal = (b as any)[options.orderBy!];
-        const order = options.order === 'ASC' ? 1 : -1;
-        
-        if (aVal < bVal) return -1 * order;
-        if (aVal > bVal) return 1 * order;
-        return 0;
-      });
+      const sortOrder = options.order === 'ASC' ? 1 : -1;
+      query.sort({ [options.orderBy]: sortOrder });
     } else {
       // Ordenar por lastActivity por defecto
-      filtered.sort((a, b) => b.lastActivity.getTime() - a.lastActivity.getTime());
+      query.sort({ lastActivity: -1 });
     }
 
     // Aplicar paginación
+    if (options.offset) {
+      query.skip(options.offset);
+    }
     if (options.limit) {
-      const offset = options.offset || 0;
-      filtered = filtered.slice(offset, offset + options.limit);
+      query.limit(options.limit);
     }
 
-    return filtered;
+    const conversations = await query.exec();
+    return conversations.map(conv => this.toConversationEntity(conv));
   }
 
   async findByUserPaginated(userId: string, options: PaginationOptions): Promise<PaginatedResult<Conversation>> {
@@ -85,42 +82,37 @@ export class ConversationService implements IConversationService {
     const sortBy = options.sortBy || 'lastActivity';
     const sortOrder = options.sortOrder || 'desc';
 
-    let conversations = Array.from(this.conversations.values())
-      .filter(conv => conv.userId === userId);
+    // Construir query base
+    const baseQuery = { userId, isActive: true };
+    let query = this.conversationModel.find(baseQuery);
 
     // Aplicar búsqueda
     if (options.search) {
-      const search = options.search.toLowerCase();
-      conversations = conversations.filter(conv => 
-        conv.title.toLowerCase().includes(search) ||
-        conv.model.toLowerCase().includes(search)
-      );
+      const search = options.search;
+      query = this.conversationModel.find({
+        ...baseQuery,
+        $or: [
+          { title: { $regex: search, $options: 'i' } },
+          { model: { $regex: search, $options: 'i' } }
+        ]
+      });
     }
 
-    const total = conversations.length;
+    // Contar total
+    const total = await this.conversationModel.countDocuments(query.getQuery()).exec();
 
     // Aplicar ordenamiento
-    const order = sortOrder === 'asc' ? 1 : -1;
-    
-    conversations.sort((a, b) => {
-      const aVal = (a as any)[sortBy];
-      const bVal = (b as any)[sortBy];
-      
-      if (aVal instanceof Date && bVal instanceof Date) {
-        return (aVal.getTime() - bVal.getTime()) * order;
-      }
-      
-      if (aVal < bVal) return -1 * order;
-      if (aVal > bVal) return 1 * order;
-      return 0;
-    });
+    const sortOrder_num = sortOrder === 'asc' ? 1 : -1;
+    query.sort({ [sortBy]: sortOrder_num });
 
     // Aplicar paginación
     const offset = (page - 1) * limit;
-    const paginatedData = conversations.slice(offset, offset + limit);
+    query.skip(offset).limit(limit);
+
+    const conversations = await query.exec();
 
     return {
-      data: paginatedData,
+      data: conversations.map(conv => this.toConversationEntity(conv)),
       pagination: {
         page,
         limit,
@@ -133,54 +125,62 @@ export class ConversationService implements IConversationService {
   }
 
   async findById(id: string): Promise<Conversation | null> {
-    return this.conversations.get(id) || null;
+    const conversation = await this.conversationModel.findOne({ id, isActive: true }).exec();
+    return conversation ? this.toConversationEntity(conversation) : null;
   }
 
   async update(id: string, data: UpdateConversationData): Promise<Conversation> {
-    const conversation = this.conversations.get(id);
-    if (!conversation) {
+    const updatedConversation = await this.conversationModel.findOneAndUpdate(
+      { id, isActive: true },
+      { ...data, updatedAt: new Date() },
+      { new: true }
+    ).exec();
+
+    if (!updatedConversation) {
       throw new NotFoundException(`Conversation with ID ${id} not found`);
     }
 
-    const updatedConversation: Conversation = {
-      ...conversation,
-      ...data,
-      updatedAt: new Date()
-    };
-
-    this.conversations.set(id, updatedConversation);
-    return updatedConversation;
+    return this.toConversationEntity(updatedConversation);
   }
 
   async delete(id: string): Promise<void> {
-    const conversation = this.conversations.get(id);
-    if (!conversation) {
+    const result = await this.conversationModel.findOneAndUpdate(
+      { id, isActive: true },
+      { isActive: false, updatedAt: new Date() }
+    ).exec();
+
+    if (!result) {
       throw new NotFoundException(`Conversation with ID ${id} not found`);
     }
-
-    this.conversations.delete(id);
   }
 
   async incrementMessageCount(id: string): Promise<void> {
-    const conversation = this.conversations.get(id);
-    if (!conversation) {
+    const result = await this.conversationModel.findOneAndUpdate(
+      { id, isActive: true },
+      { 
+        $inc: { messageCount: 1 },
+        updatedAt: new Date()
+      }
+    ).exec();
+
+    if (!result) {
       throw new NotFoundException(`Conversation with ID ${id} not found`);
     }
-
-    conversation.messageCount += 1;
-    conversation.updatedAt = new Date();
-    this.conversations.set(id, conversation);
   }
 
   async updateLastActivity(id: string): Promise<void> {
-    const conversation = this.conversations.get(id);
-    if (!conversation) {
+    const now = new Date();
+    const result = await this.conversationModel.findOneAndUpdate(
+      { id, isActive: true },
+      { 
+        lastActivity: now,
+        updatedAt: now
+      }
+    ).exec();
+
+    if (!result) {
       throw new NotFoundException(`Conversation with ID ${id} not found`);
     }
-
-    conversation.lastActivity = new Date();
-    conversation.updatedAt = new Date();
-    this.conversations.set(id, conversation);
   }
 
   async validateOwnership(conversationId: string, userId: string): Promise<Conversation> {
@@ -194,5 +194,24 @@ export class ConversationService implements IConversationService {
     }
 
     return conversation;
+  }
+
+  // Helper method to convert Mongoose document to Conversation entity
+  private toConversationEntity(doc: ConversationDocument): Conversation {
+    return {
+      id: doc.id,
+      title: doc.title,
+      userId: doc.userId,
+      aiProvider: doc.aiProvider,
+      model: doc.model,
+      systemPrompt: doc.systemPrompt,
+      settings: doc.settings,
+      messageCount: doc.messageCount,
+      lastActivity: doc.lastActivity,
+      createdAt: doc.createdAt || new Date(),
+      updatedAt: doc.updatedAt || new Date(),
+      isActive: doc.isActive,
+      metadata: doc.metadata
+    };
   }
 }

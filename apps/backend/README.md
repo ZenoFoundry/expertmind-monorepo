@@ -1,11 +1,10 @@
 # ExpertMind Backend
 
-Backend desarrollado en NestJS con integración a Ollama para el proyecto ExpertMind.
+Backend desarrollado en NestJS con integración a agno para el proyecto ExpertMind.
 
 ## 🚀 Características
 
 - API REST desarrollada con NestJS
-- Integración completa con Ollama
 - Soporte para múltiples modelos de IA
 - Documentación automática con Swagger
 - Configuración Docker lista para producción
@@ -46,7 +45,6 @@ Backend desarrollado en NestJS con integración a Ollama para el proyecto Expert
 
    Esto iniciará:
    - Backend en `http://localhost:3001`
-   - Ollama en `http://localhost:11434`
    - Frontend en `http://localhost:5173`
    - Descarga automática de TinyLlama
 
@@ -58,8 +56,6 @@ Backend desarrollado en NestJS con integración a Ollama para el proyecto Expert
    # Solo backend
    yarn docker:logs:backend
    
-   # Solo Ollama
-   yarn docker:logs:ollama
    ```
 
 ## 📚 API Endpoints
@@ -69,12 +65,6 @@ Backend desarrollado en NestJS con integración a Ollama para el proyecto Expert
 - `GET /health` - Estado detallado del servicio
 - `GET /api` - Documentación Swagger
 
-### Ollama
-- `GET /ollama/models` - Listar modelos disponibles
-- `GET /ollama/status` - Estado de conexión con Ollama
-- `POST /ollama/chat` - Conversación con un modelo
-- `POST /ollama/generate` - Generar respuesta con prompt
-- `POST /ollama/pull/:modelName` - Descargar un modelo específico
 
 ## 💡 Ejemplos de Uso
 
