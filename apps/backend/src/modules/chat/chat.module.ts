@@ -1,6 +1,10 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { HttpModule } from '@nestjs/axios';
+import { MongooseModule } from '@nestjs/mongoose';
+
+// Schemas
+import { ConversationEntity, ConversationSchema } from './schemas/conversation.schema';
 
 // Controllers
 import { ChatController } from './controller/chat.controller';
@@ -22,7 +26,10 @@ import { AuthModule } from '../auth/auth.module';
   imports: [
     ConfigModule,
     HttpModule,
-    AgnoModule,  // Reemplazamos OllamaModule por AgnoModule
+    MongooseModule.forFeature([
+      { name: ConversationEntity.name, schema: ConversationSchema }
+    ]),
+    AgnoModule,  
     AuthModule   // Para los guards de autenticación
   ],
   controllers: [

@@ -36,9 +36,9 @@ import {
 } from '../dtos';
 
 @ApiTags('chat')
+@ApiBearerAuth()
 @Controller('chat')
 @UseGuards(JwtAuthGuard)
-@ApiBearerAuth()
 export class ChatController {
   private readonly logger = new Logger(ChatController.name);
 

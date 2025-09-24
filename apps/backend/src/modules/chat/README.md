@@ -57,7 +57,7 @@ curl -X POST http://localhost:3001/chat/conversations \
   -H "Content-Type: application/json" \
   -d '{
     "title": "Mi chat sobre TypeScript",
-    "aiProvider": "ollama",
+    "aiProvider": "agno",
     "model": "llama2",
     "systemPrompt": "Eres un asistente experto en programación.",
     "settings": {
